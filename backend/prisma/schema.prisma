@@ -1,0 +1,317 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  firstName    String   @map("first_name")
+  lastName     String   @map("last_name")
+  role         Role     @default(CUSTOMER)
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  vendorProfile Vendor?
+  orders        Order[]
+  reviews       Review[]
+  deviceTokens  DeviceToken[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Vendor {
+  id               String   @id @default(cuid())
+  userId           String   @unique @map("user_id")
+  storeName        String   @unique @map("store_name")
+  slug             String   @unique
+  description      String?
+  logo             String?
+  coverImage       String?  @map("cover_image")
+  isActive         Boolean  @default(false) @map("is_active")
+  isApproved       Boolean  @default(false) @map("is_approved")
+  commissionRate   Float    @default(10.0) @map("commission_rate")
+  stripeAccountId  String?  @map("stripe_account_id")
+  settings         Json?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products     Product[]
+  orderItems   OrderItem[]
+  vendorOrders VendorOrder[]
+  generationUsages GenerationUsage[]
+  generationJobs   GenerationJob[]
+  adCampaigns      AdCampaign[]
+
+  @@map("vendors")
+}
+
+model Product {
+  id           String   @id @default(cuid())
+  vendorId     String   @map("vendor_id")
+  name         String
+  slug         String   @unique
+  description  String
+  price        Float
+  comparePrice Float?   @map("compare_price")
+  costPerItem  Float?   @map("cost_per_item")
+  inventory    Int      @default(0)
+  sku          String?
+  images       String[]
+  category     String?
+  tags         String[]
+  isActive     Boolean  @default(true) @map("is_active")
+  isDigital    Boolean  @default(false) @map("is_digital")
+  weight       Float?
+  dimensions   Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  vendor     Vendor      @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+  reviews    Review[]
+
+  @@index([vendorId])
+  @@index([category])
+  @@map("products")
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  customerId      String        @map("customer_id")
+  status          OrderStatus   @default(PENDING)
+  totalAmount     Float         @map("total_amount")
+  subtotal        Float
+  tax             Float         @default(0)
+  shippingTotal   Float         @default(0) @map("shipping_total")
+  discountTotal   Float         @default(0) @map("discount_total")
+  paymentIntentId String?       @map("payment_intent_id")
+  paymentStatus   PaymentStatus @default(PENDING) @map("payment_status")
+  shippingAddress Json          @map("shipping_address")
+  billingAddress  Json?         @map("billing_address")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  customer     User          @relation(fields: [customerId], references: [id])
+  items        OrderItem[]
+  vendorOrders VendorOrder[]
+
+  @@index([customerId])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String @id @default(cuid())
+  orderId     String @map("order_id")
+  vendorId    String @map("vendor_id")
+  productId   String @map("product_id")
+  quantity    Int
+  price       Float
+  total       Float
+  variantData Json?  @map("variant_data")
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  vendor  Vendor  @relation(fields: [vendorId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([vendorId])
+  @@map("order_items")
+}
+
+model VendorOrder {
+  id              String            @id @default(cuid())
+  orderId         String            @map("order_id")
+  vendorId        String            @map("vendor_id")
+  status          VendorOrderStatus @default(PENDING)
+  subtotal        Float
+  commission      Float
+  gatewayFee      Float             @default(0) @map("gateway_fee")
+  feeBreakdown    Json?             @map("fee_breakdown")
+  payoutAmount    Float             @map("payout_amount")
+  shippingCarrier String?           @map("shipping_carrier")
+  trackingNumber  String?           @map("tracking_number")
+  shippedAt       DateTime?         @map("shipped_at")
+  deliveredAt     DateTime?         @map("delivered_at")
+
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  vendor Vendor @relation(fields: [vendorId], references: [id])
+
+  @@index([orderId])
+  @@index([vendorId])
+  @@map("vendor_orders")
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  productId  String   @map("product_id")
+  customerId String   @map("customer_id")
+  rating     Int      @default(5)
+  title      String?
+  content    String
+  images     String[]
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  product  Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customer User    @relation(fields: [customerId], references: [id])
+
+  @@index([productId])
+  @@map("reviews")
+}
+
+enum Role {
+  CUSTOMER
+  VENDOR
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum VendorOrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum GenerationAssetType {
+  LOGO
+  BANNER
+}
+
+enum AdSlot {
+  HOMEPAGE_BANNER
+  SEARCH_FEATURE
+  SHOP_HIGHLIGHT
+  PUSH_BLAST
+}
+
+enum AdCampaignStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  ENDED
+  CANCELLED
+}
+
+enum AdEventType {
+  IMPRESSION
+  CLICK
+}
+
+model GenerationUsage {
+  id          String               @id @default(cuid())
+  vendorId    String               @map("vendor_id")
+  assetType   GenerationAssetType  @map("asset_type")
+  freeUsed    Int                  @default(0) @map("free_used")
+  paidCredits Int                  @default(0) @map("paid_credits")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId, assetType])
+  @@map("generation_usages")
+}
+
+model GenerationJob {
+  id        String              @id @default(cuid())
+  vendorId  String              @map("vendor_id")
+  assetType GenerationAssetType @map("asset_type")
+  prompt    String
+  imageUrl  String              @map("image_url")
+  provider  String
+  billedAs  String              @map("billed_as")
+  createdAt DateTime            @default(now()) @map("created_at")
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId])
+  @@map("generation_jobs")
+}
+
+model AdCampaign {
+  id           String            @id @default(cuid())
+  vendorId     String            @map("vendor_id")
+  slot         AdSlot
+  title        String
+  headline     String?
+  imageUrl     String?           @map("image_url")
+  linkUrl      String?           @map("link_url")
+  status       AdCampaignStatus  @default(DRAFT)
+  startsAt     DateTime          @map("starts_at")
+  endsAt       DateTime          @map("ends_at")
+  price        Float
+  impressions  Int               @default(0)
+  clicks       Int               @default(0)
+  audienceSize Int?              @map("audience_size")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  vendor Vendor    @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  events AdEvent[]
+
+  @@index([slot, status])
+  @@index([vendorId])
+  @@map("ad_campaigns")
+}
+
+model AdEvent {
+  id         String      @id @default(cuid())
+  campaignId String      @map("campaign_id")
+  type       AdEventType
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  campaign AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId, type])
+  @@map("ad_events")
+}
+
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String?  @map("user_id")
+  token     String   @unique
+  platform  String   @default("web")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("device_tokens")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?  @map("user_id")
+  title     String
+  body      String
+  data      Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("notifications")
+}

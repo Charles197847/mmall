@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+build/
+.next/
+.expo/
+.turbo/
+*.tsbuildinfo
+out/
+
+# Env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# Testing
+coverage/
+
+# Prisma
+backend/prisma/*.db
+
+# Docker
+postgres_data/
+
+# Uploads / local storage
+uploads/
+tmp/
+
+# Expo
+apps/customer-app/.expo/
+apps/customer-app/dist/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Misc
+.cache/

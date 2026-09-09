@@ -1,0 +1,20 @@
+{
+  "name": "@shopping-mall/shared-ui",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./components/index.ts",
+  "types": "./components/index.ts",
+  "exports": {
+    ".": "./components/index.ts"
+  },
+  "scripts": {
+    "build": "echo \"shared-ui is source-only\"",
+    "lint": "echo \"no lint\"",
+    "typecheck": "echo \"skip\"",
+    "clean": "echo \"ok\""
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-native": "*"
+  }
+}

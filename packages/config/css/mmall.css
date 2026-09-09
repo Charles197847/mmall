@@ -1,0 +1,114 @@
+:root,
+html.dark {
+  --mm-void: 5 8 20;
+  --mm-navy: 11 23 54;
+  --mm-panel: 18 32 68;
+  --mm-glass: 22 38 80;
+  --mm-ice: 232 238 252;
+  --mm-mute: 139 160 201;
+  --mm-brand: 47 107 255;
+  --mm-signal: 255 45 74;
+  --mm-glow: 61 232 255;
+  --mm-card: rgba(18, 32, 68, 0.78);
+  --mm-card-border: rgba(61, 232, 255, 0.14);
+  --mm-input: rgba(11, 23, 54, 0.92);
+  --mm-placeholder: #6f84ad;
+  --mm-grid:
+    radial-gradient(circle at 18% -8%, rgba(47, 107, 255, 0.28), transparent 42%),
+    radial-gradient(circle at 92% 8%, rgba(61, 232, 255, 0.12), transparent 34%),
+    #050814;
+}
+
+html.light {
+  --mm-void: 243 246 255;
+  --mm-navy: 255 255 255;
+  --mm-panel: 255 255 255;
+  --mm-glass: 238 242 255;
+  --mm-ice: 11 23 54;
+  --mm-mute: 90 107 140;
+  --mm-brand: 47 107 255;
+  --mm-signal: 225 29 72;
+  --mm-glow: 21 87 224;
+  --mm-card: rgba(255, 255, 255, 0.92);
+  --mm-card-border: rgba(47, 107, 255, 0.14);
+  --mm-input: #ffffff;
+  --mm-placeholder: #7b8aa8;
+  --mm-grid:
+    radial-gradient(circle at 18% -8%, rgba(47, 107, 255, 0.14), transparent 42%),
+    radial-gradient(circle at 92% 8%, rgba(21, 87, 224, 0.08), transparent 34%),
+    #f3f6ff;
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--mm-grid);
+  color: rgb(var(--mm-ice));
+}
+
+.mm-card {
+  background: var(--mm-card);
+  border: 1px solid var(--mm-card-border);
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(18px);
+}
+
+.mm-input,
+input:not([type='checkbox']):not([type='radio']):not([type='file']),
+select,
+textarea {
+  background: var(--mm-input);
+  color: rgb(var(--mm-ice));
+  border-color: var(--mm-card-border);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--mm-placeholder);
+}
+
+.bg-white {
+  background-color: var(--mm-card) !important;
+  color: inherit;
+}
+
+.bg-gray-50,
+.bg-gray-100,
+.bg-slate-100 {
+  background-color: transparent !important;
+}
+
+.border-gray-100,
+.border-gray-200 {
+  border-color: transparent !important;
+}
+
+.mm-rule {
+  display: block;
+  height: 2px;
+  border: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(var(--mm-glow) / 0.55) 50%,
+    transparent 100%
+  );
+  box-shadow: 0 0 16px rgb(var(--mm-glow) / 0.28);
+}
+
+.text-slate-500,
+.text-gray-500,
+.text-slate-600,
+.text-gray-600 {
+  color: rgb(var(--mm-mute)) !important;
+}
+
+.bg-blue-600,
+.hover\:bg-blue-700:hover {
+  background-color: rgb(var(--mm-brand)) !important;
+}
+
+.bg-slate-900,
+.bg-slate-950 {
+  background: rgb(var(--mm-navy)) !important;
+}

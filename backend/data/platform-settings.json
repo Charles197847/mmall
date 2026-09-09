@@ -1,0 +1,62 @@
+{
+  "defaultCommission": 10,
+  "minPayoutAmount": 10,
+  "currency": "ZAR",
+  "shippingDefault": 0,
+  "monthlyPlatformFee": 599,
+  "gatewayPercent": 2.5,
+  "gatewayFixed": 2,
+  "withdrawalFee": 10,
+  "logoGenerationPrice": 299,
+  "bannerGenerationPrice": 599,
+  "homepageBannerWeeklyPrice": 1500,
+  "searchFeatureWeeklyPrice": 900,
+  "shopHighlightWeeklyPrice": 600,
+  "pushBlastMinPrice": 5000,
+  "pushBlastMaxPrice": 10000,
+  "pushBlastAudience": 200000,
+  "categoryCommissions": [
+    {
+      "id": "electronics",
+      "label": "Electronics & Computers",
+      "rate": 5,
+      "match": ["electronics", "computers", "wearables", "audio"],
+      "examples": "Laptops, smartphones, audio gear, PC components"
+    },
+    {
+      "id": "appliances",
+      "label": "Home Appliances & Hardware",
+      "rate": 7,
+      "match": ["appliances", "hardware", "tools"],
+      "examples": "Kitchen appliances, power tools, home fittings"
+    },
+    {
+      "id": "general",
+      "label": "General Merchandise & Home",
+      "rate": 10,
+      "match": ["home", "outdoor", "sports", "toys", "books", "furniture"],
+      "examples": "Furniture, decor, outdoor equipment, toys"
+    },
+    {
+      "id": "beauty",
+      "label": "Beauty, Health & Personal Care",
+      "rate": 12,
+      "match": ["beauty", "health", "personal care"],
+      "examples": "Cosmetics, skincare, supplements"
+    },
+    {
+      "id": "fashion",
+      "label": "Fashion, Apparel & Accessories",
+      "rate": 15,
+      "match": ["fashion", "apparel", "accessories", "clothing"],
+      "examples": "Clothing, footwear, jewelry, luggage"
+    },
+    {
+      "id": "digital",
+      "label": "Digital Goods & Software",
+      "rate": 15,
+      "match": ["digital", "software"],
+      "examples": "Digital downloads, e-books, course materials"
+    }
+  ]
+}

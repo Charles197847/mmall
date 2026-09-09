@@ -1,0 +1,38 @@
+@import '../../../packages/config/css/mmall.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Local fallback so Expo web has theme vars even if the workspace import is skipped. */
+:root,
+html.dark {
+  --mm-void: 5 8 20;
+  --mm-navy: 11 23 54;
+  --mm-panel: 18 32 68;
+  --mm-glass: 22 38 80;
+  --mm-ice: 232 238 252;
+  --mm-mute: 139 160 201;
+  --mm-brand: 47 107 255;
+  --mm-signal: 255 45 74;
+  --mm-glow: 61 232 255;
+}
+
+html.light {
+  --mm-void: 243 246 255;
+  --mm-navy: 255 255 255;
+  --mm-panel: 255 255 255;
+  --mm-glass: 238 242 255;
+  --mm-ice: 11 23 54;
+  --mm-mute: 90 107 140;
+  --mm-brand: 47 107 255;
+  --mm-signal: 225 29 72;
+  --mm-glow: 21 87 224;
+}
+
+/* Drop React Navigation's default hairline on web */
+[role='navigation'],
+header {
+  border-bottom-color: transparent !important;
+  box-shadow: none !important;
+}

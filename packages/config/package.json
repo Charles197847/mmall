@@ -1,0 +1,22 @@
+{
+  "name": "@shopping-mall/config",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./typescript/base": "./typescript/base.json",
+    "./tailwind/native": "./tailwind/native.js",
+    "./tailwind/web": "./tailwind/web.js",
+    "./eslint/base": "./eslint/base.js",
+    "./tamagui": "./tamagui/tamagui.config.ts"
+  },
+  "scripts": {
+    "build": "echo \"config package\"",
+    "lint": "echo \"no lint\"",
+    "typecheck": "echo \"skip\"",
+    "clean": "echo \"ok\""
+  },
+  "dependencies": {
+    "@tamagui/config": "^1.125.0",
+    "tamagui": "^1.125.0"
+  }
+}
