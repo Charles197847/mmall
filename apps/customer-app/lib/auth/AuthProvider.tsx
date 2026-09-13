@@ -10,6 +10,7 @@ interface AuthContextType {
   token: string | null
   isLoading: boolean
   persist: (nextToken: string, nextUser: User) => Promise<void>
+  applyUser: (nextUser: User) => Promise<void>
   login: (email: string, password: string) => Promise<void>
   loginWithPasskey: (email?: string) => Promise<void>
   registerPasskey: () => Promise<void>
@@ -29,6 +30,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setToken(nextToken)
     setUser(nextUser)
     await sessionStore.write(sessionStore.TOKEN, nextToken)
+    await sessionStore.write(sessionStore.USER, JSON.stringify(nextUser))
+  }
+
+  const applyUser = async (nextUser: User) => {
+    setUser(nextUser)
     await sessionStore.write(sessionStore.USER, JSON.stringify(nextUser))
   }
 
@@ -114,6 +120,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         token,
         isLoading,
         persist,
+        applyUser,
         login,
         loginWithPasskey,
         registerPasskey,

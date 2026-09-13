@@ -20,21 +20,21 @@ export function ProductRail({
   if (!loading && products.length === 0) return null
 
   return (
-    <View className="mt-6">
+    <View className="mb-10">
       <View className="px-4 mb-3 flex-row justify-between items-end">
         <View className="flex-1 pr-3">
-          <Text className="text-xl font-bold text-ice">{title}</Text>
+          <Text className="text-xl font-semibold text-ice">{title}</Text>
           {subtitle ? <Text className="text-mute text-sm mt-0.5">{subtitle}</Text> : null}
         </View>
         {onSeeAll ? (
           <TouchableOpacity onPress={onSeeAll} hitSlop={8}>
-            <Text className="text-glow font-semibold">{seeAllLabel}</Text>
+            <Text className="text-sm font-semibold text-glow">{seeAllLabel}</Text>
           </TouchableOpacity>
         ) : null}
       </View>
 
       {loading ? (
-        <Text className="px-4 text-mute">Loading catalog...</Text>
+        <Text className="px-4 text-mute">Loading catalog…</Text>
       ) : (
         <ScrollView
           horizontal

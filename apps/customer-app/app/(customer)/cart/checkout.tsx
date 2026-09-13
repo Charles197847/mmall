@@ -9,6 +9,7 @@ import { useCartStore } from '../../../stores/cartStore'
 import { useAuth } from '../../../lib/auth/AuthProvider'
 import { api } from '../../../lib/api'
 import { mmall } from '../../../lib/theme'
+import { useAreaStore } from '../../../stores/areaStore'
 
 function readWebDeliverTo() {
   if (typeof window === 'undefined') return null
@@ -41,13 +42,14 @@ export default function CheckoutScreen() {
     if (hydrated) return
     const saved = user?.deliveryAddress
     const web = readWebDeliverTo()
+    const deliver = useAreaStore.getState().place
     const place = shopperAreaFromAddress(saved) ?? shopperAreaFromAddress(web)
     setAddress((current) => ({
       ...current,
       street: saved?.line1 || current.street,
-      city: place?.city || saved?.city || web?.city || current.city,
-      state: place?.province || saved?.state || web?.province || current.state,
-      postalCode: place?.postalCode || saved?.postalCode || web?.postalCode || current.postalCode,
+      city: place?.city || saved?.city || web?.city || deliver?.city || current.city,
+      state: place?.province || saved?.state || web?.province || deliver?.province || current.state,
+      postalCode: place?.postalCode || saved?.postalCode || web?.postalCode || deliver?.postalCode || current.postalCode,
     }))
     setHydrated(true)
   }, [user, hydrated])

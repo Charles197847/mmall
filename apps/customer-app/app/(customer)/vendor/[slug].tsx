@@ -11,7 +11,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 import type { Product } from '@shopping-mall/shared-types'
-import { api } from '../../../lib/api'
+import { loadProducts, loadVendor } from '../../../lib/catalog'
 import { ProductCard } from '../../../components/product/ProductCard'
 import { ProductRail } from '../../../components/product/ProductRail'
 import { useCartStore } from '../../../stores/cartStore'
@@ -42,7 +42,7 @@ export default function VendorStoreScreen() {
 
   const { data: vendor, isLoading } = useQuery({
     queryKey: ['vendor', slug],
-    queryFn: () => api.vendors.get(slug),
+    queryFn: () => loadVendor(slug!),
     enabled: Boolean(slug),
   })
 
@@ -69,7 +69,7 @@ export default function VendorStoreScreen() {
     queryKey: ['you-might-like', vendor?.id, likeCategory],
     queryFn: async () => {
       const preferred = likeCategory
-        ? await api.products.list({
+        ? await loadProducts({
             category: likeCategory,
             excludeVendorId: vendor?.id,
             page: 1,
@@ -77,7 +77,7 @@ export default function VendorStoreScreen() {
           })
         : { items: [] as Product[] }
       if ((preferred.items?.length ?? 0) >= 4) return preferred
-      const fallback = await api.products.list({
+      const fallback = await loadProducts({
         excludeVendorId: vendor?.id,
         page: 1,
         limit: 8,

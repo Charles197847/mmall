@@ -35,7 +35,7 @@ export default function CustomerLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Mall',
           headerShown: false,
           tabBarIcon: ({ color, size }) => <Feather name="home" size={size} color={color} />,
         }}
@@ -43,14 +43,16 @@ export default function CustomerLayout() {
       <Tabs.Screen
         name="browse/index"
         options={{
-          title: 'Browse',
+          title: 'Courts',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => <Feather name="search" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="stores/index"
         options={{
-          title: 'Stores',
+          title: 'Shops',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => <Feather name="layers" size={size} color={color} />,
         }}
       />
@@ -89,6 +91,12 @@ export default function CustomerLayout() {
       />
       <Tabs.Screen name="product/[id]" options={{ href: null, title: 'Product' }} />
       <Tabs.Screen name="vendor/[slug]" options={{ href: null, title: 'Store' }} />
+      <Tabs.Screen name="saved/index" options={{ href: null, headerShown: false, title: 'Saved' }} />
+      <Tabs.Screen name="help/index" options={{ href: null, headerShown: false, title: 'Customer service' }} />
+      <Tabs.Screen name="specials/index" options={{ href: null, headerShown: false, title: "Today's specials" }} />
+      <Tabs.Screen name="bestsellers/index" options={{ href: null, headerShown: false, title: 'Best sellers' }} />
+      <Tabs.Screen name="vouchers/index" options={{ href: null, headerShown: false, title: 'Promotional vouchers' }} />
+      <Tabs.Screen name="gift-cards/index" options={{ href: null, headerShown: false, title: 'Gift cards' }} />
     </Tabs>
   )
 }

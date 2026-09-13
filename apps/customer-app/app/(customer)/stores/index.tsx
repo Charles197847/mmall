@@ -1,15 +1,24 @@
-import { ActivityIndicator, FlatList, Image, Text, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, FlatList, Text, View } from 'react-native'
 import { useQuery } from '@tanstack/react-query'
-import { router } from 'expo-router'
-import { api } from '../../../lib/api'
+import { proximityScore } from '@shopping-mall/shared-types'
+import { loadVendors } from '../../../lib/catalog'
+import { useAreaStore } from '../../../stores/areaStore'
+import { StoreWindow } from '../../../components/mall/StoreWindow'
+import { DeliverTo } from '../../../components/mall/DeliverTo'
 import { mmall } from '../../../lib/theme'
 
 export default function StoresScreen() {
+  const area = useAreaStore((state) => state.place)
   const { data: vendors, isLoading } = useQuery({
     queryKey: ['vendors'],
-    queryFn: () => api.vendors.list(),
+    queryFn: () => loadVendors(),
     staleTime: 60_000,
   })
+
+  const shops = [...(vendors ?? [])].sort(
+    (a, b) =>
+      proximityScore(area, a.city, a.lat, a.lng) - proximityScore(area, b.city, b.lat, b.lng),
+  )
 
   if (isLoading) {
     return (
@@ -22,30 +31,19 @@ export default function StoresScreen() {
   return (
     <View className="flex-1 bg-void">
       <FlatList
-        data={vendors ?? []}
+        data={shops}
         keyExtractor={(item) => item.id}
-        numColumns={2}
-        contentContainerClassName="p-3"
-        ListHeaderComponent={<Text className="text-2xl font-bold px-1 mb-3 text-ice">All Stores</Text>}
-        ListEmptyComponent={<Text className="text-mute px-1">No stores are live yet.</Text>}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            className="w-[48%] mx-[1%] bg-panel rounded-2xl p-4 mb-4 items-center"
-            onPress={() => router.push(`/(customer)/vendor/${item.slug}`)}
-          >
-            {item.logo ? (
-              <Image source={{ uri: item.logo }} className="w-20 h-20 rounded-2xl bg-navy" />
-            ) : (
-              <View className="w-20 h-20 rounded-2xl bg-brand/20 items-center justify-center">
-                <Text className="text-2xl font-bold text-glow">{item.storeName[0]}</Text>
-              </View>
-            )}
-            <Text className="font-semibold mt-2 text-center text-ice">{item.storeName}</Text>
-            <Text className="text-xs text-mute text-center" numberOfLines={2}>
-              {item.description}
+        renderItem={({ item }) => <StoreWindow vendor={item} />}
+        ListHeaderComponent={
+          <View className="px-4 pt-14 pb-6">
+            <Text className="text-[11px] tracking-[0.28em] text-mute uppercase">Directory</Text>
+            <Text className="text-3xl font-semibold text-ice mt-1">Shops</Text>
+            <Text className="text-mute mt-2 mb-4">
+              {area ? `Nearest windows to ${area.city}` : 'Independent stores on the grid'}
             </Text>
-          </TouchableOpacity>
-        )}
+            <DeliverTo />
+          </View>
+        }
       />
     </View>
   )

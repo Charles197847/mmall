@@ -1,17 +1,21 @@
-import { Image, Text, View } from 'react-native'
+import { Image, View } from 'react-native'
 
 export function BrandMark({ compact = false }: { compact?: boolean }) {
-  const size = compact ? 40 : 56
+  const bag = compact ? 36 : 48
   return (
     <View className="flex-row items-center">
       <Image
-        source={require('../../assets/icon.png')}
-        style={{ width: size, height: size, borderRadius: compact ? 12 : 16 }}
+        source={require('../../assets/mmall-bag.png')}
+        style={{ width: bag, height: bag }}
+        resizeMode="contain"
+        accessibilityLabel=""
       />
-      <View className="ml-3">
-        <Text className={`text-ice font-bold tracking-widest ${compact ? 'text-lg' : 'text-2xl'}`}>MMall</Text>
-        {compact ? null : <Text className="text-mute text-[11px] tracking-widest">COMMERCE GRID 2030</Text>}
-      </View>
+      <Image
+        source={require('../../assets/mmall-wordmark.png')}
+        style={{ height: compact ? 22 : 28, width: compact ? 92 : 118, marginLeft: 8 }}
+        resizeMode="contain"
+        accessibilityLabel="M-MALL"
+      />
     </View>
   )
 }
