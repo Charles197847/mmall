@@ -1,97 +1,100 @@
-import { useState } from 'react'
-import { Alert, Pressable, Text, TextInput, View } from 'react-native'
-import { Link, router } from 'expo-router'
+import { useEffect, useState } from 'react'
+import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { Link, router, useLocalSearchParams } from 'expo-router'
 import { useAuth } from '../../lib/auth/AuthProvider'
 import { Screen } from '../../components/ui/Screen'
 import { BrandMark } from '../../components/brand/BrandMark'
-import { ThemeToggle } from '../../components/theme/ThemeToggle'
+import { NativeAuthMethods } from '../../components/auth/NativeAuthMethods'
 import { palettes } from '../../lib/theme'
 import { useThemeStore } from '../../stores/themeStore'
+import type { User } from '@shopping-mall/shared-types'
 
 export default function LoginScreen() {
-  const { login, loginWithPasskey } = useAuth()
+  const { login, persist, consumeMagic } = useAuth()
+  const params = useLocalSearchParams<{ magic?: string }>()
   const [email, setEmail] = useState('customer@shopping-mall.local')
   const [password, setPassword] = useState('Password123!')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const mode = useThemeStore((state) => state.mode)
   const colors = palettes[mode]
 
-  const onSubmit = async () => {
-    setLoading(true)
-    try {
-      await login(email, password)
-      router.replace('/(customer)')
-    } catch (error) {
-      Alert.alert('Login failed', error instanceof Error ? error.message : 'Try again')
-    } finally {
-      setLoading(false)
+  async function finish(result: { token: string; user: User }) {
+    if (result.user.role === 'VENDOR') {
+      Alert.alert('Merchant account', 'Use the vendor desk on the web to sell.')
+      return
     }
+    await persist(result.token, result.user)
+    router.replace('/(customer)')
   }
 
-  const onPasskey = async () => {
-    setLoading(true)
-    try {
-      await loginWithPasskey(email)
-      router.replace('/(customer)')
-    } catch (error) {
-      Alert.alert('Passkey failed', error instanceof Error ? error.message : 'Use password instead')
-    } finally {
-      setLoading(false)
-    }
-  }
+  useEffect(() => {
+    const magic = typeof params.magic === 'string' ? params.magic : ''
+    if (!magic) return
+    void consumeMagic(magic)
+      .then(() => router.replace('/(customer)'))
+      .catch((error) => Alert.alert('Magic link', error instanceof Error ? error.message : 'Failed'))
+  }, [params.magic])
 
   return (
-    <Screen className="flex-1 p-6 justify-center">
-      <View className="absolute top-6 right-6">
-        <ThemeToggle />
-      </View>
+    <Screen className="flex-1">
+      <ScrollView contentContainerClassName="p-6 pt-8" keyboardShouldPersistTaps="handled">
       <BrandMark />
-      <Text className="text-ice text-3xl font-bold mt-8 mb-2">Enter the grid</Text>
-      <Text className="text-mute mb-8">Sign in to MMall to shop, track, and check out.</Text>
+      <Text className="text-ice text-3xl font-bold mt-8 mb-2">Shopper sign in</Text>
+      <Text className="text-mute mb-8">Continue with Apple, Google, a passkey, or email.</Text>
       <TextInput
-        className="bg-panel rounded-2xl px-4 py-3 mb-3 text-ice"
+        className="bg-panel rounded-full px-4 py-3 mb-2 text-ice"
         autoCapitalize="none"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
         placeholder="Email"
         placeholderTextColor={colors.mute}
-        accessibilityLabel="Email"
         autoComplete="email"
       />
-      <TextInput
-        className="bg-panel rounded-2xl px-4 py-3 mb-6 text-ice"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        placeholder="Password"
-        placeholderTextColor={colors.mute}
-        accessibilityLabel="Password"
-        autoComplete="password"
-      />
-      <Pressable
-        className="bg-brand rounded-2xl py-3"
-        onPress={onSubmit}
-        disabled={loading}
-        accessibilityRole="button"
-        accessibilityLabel="Sign in with password"
-      >
-        <Text className="text-white text-center font-bold">{loading ? 'Signing in...' : 'Sign in'}</Text>
+      <Text className="text-xs text-mute mb-5">Needed for passkey, magic link, and email code.</Text>
+      <NativeAuthMethods purpose="login" email={email} onSession={finish} />
+
+      <Pressable className="mt-6" onPress={() => setShowPassword((value) => !value)}>
+        <Text className="text-mute">{showPassword ? 'Hide password' : 'Prefer a password?'}</Text>
       </Pressable>
-      <Pressable
-        className="bg-navy rounded-2xl py-3 mt-3"
-        onPress={onPasskey}
-        disabled={loading}
-        accessibilityRole="button"
-        accessibilityLabel="Sign in with passkey"
-      >
-        <Text className="text-glow text-center font-bold">Sign in with passkey</Text>
-      </Pressable>
-      <View className="mt-4">
+      {showPassword ? (
+        <View className="mt-3">
+          <TextInput
+            className="bg-panel rounded-full px-4 py-3 mb-3 text-ice"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Password"
+            placeholderTextColor={colors.mute}
+          />
+          <Pressable
+            className="bg-brand rounded-full py-3"
+            disabled={loading}
+            onPress={async () => {
+              setLoading(true)
+              try {
+                await login(email, password)
+                router.replace('/(customer)')
+              } catch (error) {
+                Alert.alert('Login failed', error instanceof Error ? error.message : 'Try again')
+              } finally {
+                setLoading(false)
+              }
+            }}
+          >
+            <Text className="text-white text-center font-bold">{loading ? 'Signing in...' : 'Sign in with password'}</Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      <View className="mt-8 flex-row justify-center">
+        <Text className="text-mute">New to the mall? </Text>
         <Link href="/(auth)/register">
-          <Text className="text-glow">Create an account</Text>
+          <Text className="text-glow font-semibold">Create an account</Text>
         </Link>
       </View>
+      </ScrollView>
     </Screen>
   )
 }

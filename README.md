@@ -108,6 +108,53 @@ Multi-tenant isolation uses PostgreSQL RLS plus request-scoped `app.tenant_id` /
 5. **Vendor dashboard** — products, orders, store settings
 6. **Admin panel** — approvals and platform analytics
 
+## Native app (Android and iOS)
+
+The shopper app is Expo (`apps/customer-app`). Same codebase for Android and iPhone.
+
+```bash
+# API must be running first
+pnpm --filter backend dev
+
+# Start Expo, then press a (Android) or i (iOS simulator)
+pnpm --filter customer-app dev
+```
+
+On a **physical phone**, the phone and this PC must be on the same Wi‑Fi. Expo will call the API at your LAN IP (`http://<your-ip>:4000`). Or set:
+
+```
+EXPO_PUBLIC_API_URL=http://192.168.x.x:4000/api/v1
+```
+
+Install a binary (needs Xcode on a Mac for iOS, Android Studio for Android):
+
+```bash
+cd apps/customer-app
+npx expo run:android
+npx expo run:ios
+```
+
+Cloud builds with **EAS** (Android APK and iOS from this Windows PC):
+
+```bash
+cd apps/customer-app
+npx eas-cli login
+npx eas-cli init
+npx eas-cli build --platform android --profile preview
+npx eas-cli build --platform ios --profile preview
+```
+
+Or from the repo root: `pnpm --filter customer-app eas:android`
+
+A standalone install cannot use `localhost`. After the first project exists, set the live API URL:
+
+```bash
+cd apps/customer-app
+npx eas-cli env:create --name EXPO_PUBLIC_API_URL --value https://YOUR-API/api/v1 --environment preview --visibility plaintext
+```
+
+Bundle IDs: `com.mmall.customer`. Deep link scheme: `mmall://`.
+
 ## License
 
 Private — all rights reserved.

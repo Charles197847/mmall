@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, Alert, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { router } from 'expo-router'
 import * as Linking from 'expo-linking'
+import * as WebBrowser from 'expo-web-browser'
 import type { ShippingQuote } from '@shopping-mall/shared-types'
 import { shopperAreaFromAddress } from '@shopping-mall/shared-types'
 import { useCartStore } from '../../../stores/cartStore'
@@ -103,12 +104,14 @@ export default function CheckoutScreen() {
       if (token) {
         await api.auth.updateAddress(shippingAddress, token).catch(() => undefined)
       }
+      const paymentReturnUrl = Linking.createURL('/cart/payment-return')
       const response = await api.orders.create(
         {
           items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
           shippingAddress,
           billingAddress: shippingAddress,
           shippingServiceCode: selected.serviceLevelCode,
+          paymentReturnUrl,
         },
         token,
       )
@@ -118,7 +121,17 @@ export default function CheckoutScreen() {
         window.location.href = checkoutUrl
         return
       }
-      await Linking.openURL(checkoutUrl)
+      const result = await WebBrowser.openAuthSessionAsync(checkoutUrl, paymentReturnUrl)
+      if (result.type === 'success' && result.url) {
+        const parsed = Linking.parse(result.url)
+        router.replace({
+          pathname: '/(customer)/cart/payment-return',
+          params: (parsed.queryParams ?? {}) as Record<string, string>,
+        })
+        return
+      }
+      if (result.type === 'cancel') return
+      router.replace('/(customer)/cart/payment-return')
     } catch (error) {
       Alert.alert('Checkout failed', error instanceof Error ? error.message : 'Something went wrong')
     } finally {

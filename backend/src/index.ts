@@ -63,7 +63,7 @@ async function start() {
     console.warn('Redis/queue unavailable — API will start without background jobs', error)
   }
 
-  app.listen(port, () => {
+  app.listen(port, '0.0.0.0', () => {
     console.log(`Server running on port ${port}`)
   })
 }

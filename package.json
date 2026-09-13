@@ -26,6 +26,10 @@
     "node": ">=20"
   },
   "pnpm": {
+    "overrides": {
+      "@expo/config-plugins": "9.0.17",
+      "@expo/prebuild-config": "8.2.0"
+    },
     "onlyBuiltDependencies": [
       "@prisma/client",
       "@prisma/engines",

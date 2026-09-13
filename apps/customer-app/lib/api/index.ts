@@ -1,14 +1,24 @@
 import { Platform } from 'react-native'
+import Constants from 'expo-constants'
 import type { AdPlacement, AppNotification, Order, Paginated, Product, ShippingQuote, User, Vendor } from '@shopping-mall/shared-types'
+
+function lanHost() {
+  const hostUri = Constants.expoConfig?.hostUri ?? Constants.linkingUri
+  const match = hostUri?.match(/(\d+\.\d+\.\d+\.\d+)/)
+  return match?.[1]
+}
 
 function getBaseUrl() {
   if (process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL
   }
-  if (Platform.OS === 'web' || Platform.OS === 'ios') {
+  if (Platform.OS === 'web') {
     return 'http://localhost:4000/api/v1'
   }
-  return 'http://10.0.2.2:4000/api/v1'
+  const host = lanHost()
+  if (host) return `http://${host}:4000/api/v1`
+  if (Platform.OS === 'android') return 'http://10.0.2.2:4000/api/v1'
+  return 'http://localhost:4000/api/v1'
 }
 
 export const API_BASE = getBaseUrl()
@@ -59,10 +69,51 @@ export const api = {
       const res = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, role: 'CUSTOMER' }),
       })
       return res.json() as Promise<AuthResponse>
     },
+    sendEmailOtp: (body: {
+      email: string
+      purpose?: 'login' | 'signup'
+      role?: 'CUSTOMER' | 'VENDOR'
+      firstName?: string
+      lastName?: string
+    }) =>
+      request<{ otpId: string; demoCode?: string }>('/auth/email-otp/send', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ role: 'CUSTOMER', ...body }),
+      }),
+    verifyEmailOtp: (body: { otpId: string; code: string }) =>
+      request<AuthResponse>('/auth/email-otp/verify', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(body),
+      }),
+    sendMagicLink: (body: {
+      email: string
+      purpose?: 'login' | 'signup'
+      firstName?: string
+      lastName?: string
+    }) =>
+      request<{ ok: boolean; demoLink?: string }>('/auth/magic/send', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ role: 'CUSTOMER', ...body }),
+      }),
+    consumeMagic: (token: string) =>
+      request<AuthResponse>('/auth/magic/consume', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ token }),
+      }),
+    startOAuth: (provider: 'google' | 'apple') =>
+      request<{ url?: string }>('/auth/oauth/' + provider + '/start', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ role: 'CUSTOMER' }),
+      }),
     me: (token: string) =>
       request<User & { vendor?: Vendor | null }>('/auth/me', {
         headers: getHeaders(token),

@@ -13,16 +13,7 @@ import { StoreRail } from '../../components/vendor/StoreRail'
 import { WebHeroBanner } from '../../components/brand/WebHeroBanner'
 import { palettes } from '../../lib/theme'
 import { useThemeStore } from '../../stores/themeStore'
-
-const categories = [
-  { name: 'Electronics', icon: '📱' },
-  { name: 'Fashion', icon: '👕' },
-  { name: 'Home', icon: '🏠' },
-  { name: 'Books', icon: '📚' },
-  { name: 'Beauty', icon: '💄' },
-  { name: 'Sports', icon: '⚽' },
-  { name: 'Outdoor', icon: '🏕️' },
-]
+import { mallCategories } from '../../lib/mallCategories'
 
 function SearchBar({ colors }: { colors: (typeof palettes)[keyof typeof palettes] }) {
   return (
@@ -113,7 +104,7 @@ export default function HomeScreen() {
         style={{ flexGrow: 0 }}
         contentContainerClassName="px-4"
       >
-        {categories.map((item) => (
+        {mallCategories.map((item) => (
           <TouchableOpacity
             key={item.name}
             className="items-center mr-4"

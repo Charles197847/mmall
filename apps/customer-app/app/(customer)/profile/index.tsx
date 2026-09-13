@@ -67,11 +67,24 @@ export default function ProfileScreen() {
       ) : (
         <View className="bg-panel rounded-2xl p-4">
           <Text className="text-mute mb-4">Sign in to track orders and check out faster.</Text>
-          <Link href="/(auth)/login" className="text-glow font-semibold">
+          <Link href="/(auth)/login" className="text-glow font-semibold mb-3">
             Sign in
+          </Link>
+          <Link href="/(auth)/register" className="text-glow font-semibold">
+            Create an account
           </Link>
         </View>
       )}
+
+      <View className="mt-8">
+        <Text className="text-ice font-bold mb-3">Legal</Text>
+        <Link href="/(auth)/legal-shopper" className="text-mute mb-2">
+          Shopper Terms
+        </Link>
+        <Link href="/(auth)/legal-privacy" className="text-mute">
+          Privacy Notice
+        </Link>
+      </View>
 
       {user && notes?.items?.length ? (
         <View className="mt-6">

@@ -6,8 +6,9 @@ import { ProductCard } from '../../../components/product/ProductCard'
 import { AdSlot } from '../../../components/ads/AdSlot'
 import { api } from '../../../lib/api'
 import { mmall } from '../../../lib/theme'
+import { mallCategories } from '../../../lib/mallCategories'
 
-const categories = ['Electronics', 'Fashion', 'Home', 'Books', 'Beauty', 'Sports']
+const categories = mallCategories.map((item) => item.name)
 
 export default function BrowseScreen() {
   const params = useLocalSearchParams<{ category?: string }>()

@@ -6,6 +6,21 @@ import { PAYGATE_ENCRYPTION_KEY, PAYGATE_TEST_ID, paygateChecksum, verifyChecksu
 
 const apiPublic = () => process.env.API_PUBLIC_URL ?? `http://localhost:${process.env.PORT ?? 4000}`
 const shopperReturn = () => `${process.env.FRONTEND_URL ?? 'http://localhost:8081'}/cart/payment-return`
+const nativeReturns = new Map<string, string>()
+
+function safeReturnUrl(url?: string) {
+  if (!url) return shopperReturn()
+  if (
+    url.startsWith('mmall://') ||
+    url.startsWith('exp://') ||
+    url.startsWith('http://localhost') ||
+    url.startsWith('http://127.0.0.1') ||
+    url.startsWith('https://')
+  ) {
+    return url
+  }
+  return shopperReturn()
+}
 
 type PayMethod = 'CC' | 'EW' | 'BT'
 
@@ -31,7 +46,7 @@ export function initiateChecksum(input: {
   ])
 }
 
-export async function initiatePaygate(orderId: string) {
+export async function initiatePaygate(orderId: string, paymentReturnUrl?: string) {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: { customer: true },
@@ -44,7 +59,8 @@ export async function initiatePaygate(orderId: string) {
   const payRequestId = order.payRequestId ?? randomUUID().toUpperCase()
   const amountCents = Math.round(order.totalAmount * 100)
   const transactionDate = new Date().toISOString().slice(0, 19).replace('T', ' ')
-  const returnUrl = shopperReturn()
+  const returnUrl = safeReturnUrl(paymentReturnUrl)
+  nativeReturns.set(payRequestId, returnUrl)
   const notifyUrl = `${apiPublic()}/api/v1/payments/paygate/notify`
   const checksum = initiateChecksum({
     reference: order.id,
@@ -150,7 +166,9 @@ export async function completeMockPayment(payRequestId: string, result: string) 
     TRANSACTION_STATUS: String(status),
     CHECKSUM: paygateChecksum([PAYGATE_TEST_ID, payRequestId, order.id], PAYGATE_ENCRYPTION_KEY),
   })
-  return `${shopperReturn()}?${returnQs.toString()}`
+  const dest = nativeReturns.get(payRequestId) ?? shopperReturn()
+  const join = dest.includes('?') ? '&' : '?'
+  return `${dest}${join}${returnQs.toString()}`
 }
 
 export async function applyPaygateNotify(body: Record<string, string>) {

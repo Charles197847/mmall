@@ -25,6 +25,7 @@ const createOrderSchema = z.object({
   shippingAddress: z.record(z.unknown()),
   billingAddress: z.record(z.unknown()).optional(),
   shippingServiceCode: z.enum(['ECO', 'OVN', 'SDD']).default('ECO'),
+  paymentReturnUrl: z.string().min(8).max(400).optional(),
 })
 
 router.post(
@@ -32,7 +33,8 @@ router.post(
   requireAuth,
   asyncHandler(async (req, res) => {
     const customerId = req.user!.id
-    const { items, shippingAddress, billingAddress, shippingServiceCode } = createOrderSchema.parse(req.body)
+    const { items, shippingAddress, billingAddress, shippingServiceCode, paymentReturnUrl } =
+      createOrderSchema.parse(req.body)
 
     const fees = readPlatformSettings()
     const vendorGroups = new Map<
@@ -174,7 +176,7 @@ router.post(
       payload: { productIds: items.map((item) => item.productId), orderId: order.id },
     })
     publishGrid({ type: 'order', payload: { orderId: order.id } })
-    const paygate = await initiatePaygate(order.id)
+    const paygate = await initiatePaygate(order.id, paymentReturnUrl)
 
     res.status(201).json({ ...order, shippingTotal, paygate })
   }),
