@@ -2,3 +2,8 @@ packages:
   - "apps/*"
   - "packages/*"
   - "backend"
+
+publicHoistPattern:
+  - "*expo-modules-autolinking"
+  - "*expo-modules-core"
+  - "*babel-preset-expo"
