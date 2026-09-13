@@ -8,19 +8,33 @@ import type {
   GenerationQuota,
   Order,
   Paginated,
-  PaymentIntentResponse,
+  PaygateInitiateResponse,
   PlatformSettings,
   PlatformStats,
   Product,
+  Shipment,
+  ShippingQuote,
   User,
   Vendor,
   VendorAnalytics,
+  VendorKyc,
   VendorOrderRow,
 } from '@shopping-mall/shared-types'
 
 export type ApiClientOptions = {
   baseUrl: string
   getToken?: () => string | null | Promise<string | null>
+}
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public code?: string,
+  ) {
+    super(message)
+    this.name = 'ApiError'
+  }
 }
 
 async function request<T>(
@@ -37,7 +51,8 @@ async function request<T>(
   if (response.status === 204) return undefined as T
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error((data as { error?: string }).error ?? `Request failed: ${response.status}`)
+    const payload = data as { error?: string; code?: string }
+    throw new ApiError(payload.error ?? `Request failed: ${response.status}`, response.status, payload.code)
   }
   return data as T
 }
@@ -54,7 +69,93 @@ export function createApiClient(options: ApiClientOptions) {
       }) => request<AuthResponse>(options, '/auth/register', { method: 'POST', body: JSON.stringify(body) }),
       login: (body: { email: string; password: string }) =>
         request<AuthResponse>(options, '/auth/login', { method: 'POST', body: JSON.stringify(body) }),
-      me: () => request<User & { vendor?: Vendor | null }>(options, '/auth/me'),
+      sendOtp: (body: { phone: string }) =>
+        request<{ otpId: string; demoCode?: string }>(options, '/auth/otp/send', {
+          method: 'POST',
+          body: JSON.stringify(body),
+        }),
+      registerVendor: (body: {
+        fullName: string
+        email: string
+        phone: string
+        password: string
+        otpId: string
+        otpCode: string
+        storeName?: string
+      }) =>
+        request<AuthResponse>(options, '/auth/register/vendor', {
+          method: 'POST',
+          body: JSON.stringify(body),
+        }),
+      me: () => request<User & { vendor?: Vendor | null; kyc?: VendorKyc | null }>(options, '/auth/me'),
+      updateAddress: (body: {
+        fullName?: string
+        line1?: string
+        street?: string
+        city: string
+        state?: string
+        postalCode: string
+        country?: string
+      }) => request<User>(options, '/auth/address', { method: 'PATCH', body: JSON.stringify(body) }),
+      passkeyRegisterOptions: () =>
+        request<Record<string, unknown>>(options, '/auth/passkeys/register/options', { method: 'POST' }),
+      passkeyRegisterVerify: (body: unknown) =>
+        request<{ ok: boolean }>(options, '/auth/passkeys/register/verify', {
+          method: 'POST',
+          body: JSON.stringify(body),
+        }),
+      passkeyAuthOptions: (email?: string) =>
+        request<Record<string, unknown>>(options, '/auth/passkeys/authenticate/options', {
+          method: 'POST',
+          body: JSON.stringify({ email }),
+        }),
+      passkeyAuthVerify: (body: unknown) =>
+        request<AuthResponse>(options, '/auth/passkeys/authenticate/verify', {
+          method: 'POST',
+          body: JSON.stringify(body),
+        }),
+      passkeys: () =>
+        request<{ items: Array<{ id: string; createdAt: string; backedUp: boolean; deviceType: string }> }>(
+          options,
+          '/auth/passkeys',
+        ),
+      sendEmailOtp: (body: {
+        email: string
+        purpose?: 'login' | 'signup'
+        role?: 'CUSTOMER' | 'VENDOR'
+        firstName?: string
+        lastName?: string
+      }) =>
+        request<{ otpId: string; demoCode?: string }>(options, '/auth/email-otp/send', {
+          method: 'POST',
+          body: JSON.stringify(body),
+        }),
+      verifyEmailOtp: (body: { otpId: string; code: string }) =>
+        request<AuthResponse>(options, '/auth/email-otp/verify', {
+          method: 'POST',
+          body: JSON.stringify(body),
+        }),
+      sendMagicLink: (body: {
+        email: string
+        purpose?: 'login' | 'signup'
+        role?: 'CUSTOMER' | 'VENDOR'
+        firstName?: string
+        lastName?: string
+      }) =>
+        request<{ sent: boolean; demoLink?: string }>(options, '/auth/magic/send', {
+          method: 'POST',
+          body: JSON.stringify(body),
+        }),
+      consumeMagic: (token: string) =>
+        request<AuthResponse>(options, '/auth/magic/consume', {
+          method: 'POST',
+          body: JSON.stringify({ token }),
+        }),
+      startOAuth: (provider: 'google' | 'apple', role: 'CUSTOMER' | 'VENDOR') =>
+        request<{ error?: string }>(options, `/auth/oauth/${provider}/start`, {
+          method: 'POST',
+          body: JSON.stringify({ role }),
+        }),
     },
     products: {
       list: (query: Record<string, string | number | undefined> = {}) => {
@@ -96,6 +197,11 @@ export function createApiClient(options: ApiClientOptions) {
             method: 'PATCH',
             body: JSON.stringify(body),
           }),
+        bookCourier: (vendorOrderId: string, body: { serviceLevelCode?: 'ECO' | 'OVN' | 'SDD' } = {}) =>
+          request<Shipment>(options, `/shipping/vendor-orders/${vendorOrderId}/book`, {
+            method: 'POST',
+            body: JSON.stringify(body),
+          }),
       },
     },
     orders: {
@@ -103,18 +209,35 @@ export function createApiClient(options: ApiClientOptions) {
         items: Array<{ productId: string; quantity: number }>
         shippingAddress: Record<string, unknown>
         billingAddress?: Record<string, unknown>
+        shippingServiceCode?: 'ECO' | 'OVN' | 'SDD'
       }) => request<Order>(options, '/orders', { method: 'POST', body: JSON.stringify(body) }),
       list: () => request<Order[]>(options, '/orders'),
       get: (id: string) => request<Order>(options, `/orders/${id}`),
     },
     payments: {
-      createIntent: (body: { orderId: string }) =>
-        request<PaymentIntentResponse>(options, '/payments/create-intent', {
+      initiatePaygate: (body: { orderId: string }) =>
+        request<PaygateInitiateResponse>(options, '/payments/paygate/initiate', {
           method: 'POST',
           body: JSON.stringify(body),
         }),
-      createAccountLink: () =>
-        request<{ onboardingUrl: string }>(options, '/payments/create-account-link', { method: 'POST' }),
+      registerPayout: () =>
+        request<{ beneficiaryId: string; provider: string; message: string }>(options, '/payments/payouts/register', {
+          method: 'POST',
+        }),
+    },
+    shipping: {
+      quote: (body: {
+        items: Array<{ productId: string; quantity: number }>
+        address: { city: string; postalCode?: string; state?: string; street?: string; line1?: string }
+      }) =>
+        request<{ quotes: ShippingQuote[]; weightKg: number; collectionCity: string; deliveryCity: string }>(
+          options,
+          '/shipping/quote',
+          { method: 'POST', body: JSON.stringify(body) },
+        ),
+      advance: (shipmentId: string) =>
+        request<Shipment>(options, `/shipping/${shipmentId}/advance`, { method: 'POST' }),
+      track: (trackingNumber: string) => request<Shipment>(options, `/shipping/track/${trackingNumber}`),
     },
     admin: {
       vendors: {
@@ -223,6 +346,13 @@ export function createApiClient(options: ApiClientOptions) {
       list: () => request<{ items: AppNotification[] }>(options, '/notifications'),
       registerDevice: (body: { token: string; platform: string }) =>
         request<unknown>(options, '/notifications/devices', { method: 'POST', body: JSON.stringify(body) }),
+    },
+    kyc: {
+      me: () => request<VendorKyc>(options, '/kyc/me'),
+      submit: (body: Record<string, unknown>) =>
+        request<VendorKyc>(options, '/kyc/submit', { method: 'POST', body: JSON.stringify(body) }),
+      review: (vendorId: string, body: { status: 'APPROVED' | 'REJECTED'; rejectionReason?: string }) =>
+        request<VendorKyc>(options, `/kyc/${vendorId}/review`, { method: 'POST', body: JSON.stringify(body) }),
     },
   }
 }

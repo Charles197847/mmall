@@ -5,13 +5,14 @@ import type { CSSProperties, PropsWithChildren } from 'react'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { useVendor } from '../../hooks/useVendor'
+import { isPublicPath } from '../../lib/publicPaths'
 
 export function AppShell({ children }: PropsWithChildren) {
   const pathname = usePathname()
   const { vendor } = useVendor()
   const theme = vendor?.settings?.theme
 
-  if (pathname === '/login') {
+  if (isPublicPath(pathname)) {
     return <>{children}</>
   }
 

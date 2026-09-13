@@ -6,6 +6,7 @@ import { asyncHandler, HttpError } from '../../shared/middleware/error.js'
 import { readPlatformSettings } from '../../shared/platform-settings.js'
 import { consumeGenerationQuota, quotaSnapshot } from '../../shared/generation.js'
 import { generateAssetImage } from './provider.js'
+import { assertKyc } from '../../shared/kyc.js'
 
 const router = Router()
 const assetTypeSchema = z.enum(['LOGO', 'BANNER'])
@@ -54,6 +55,15 @@ router.post(
       })
       .parse(req.body)
     const settings = readPlatformSettings()
+    const usage = await prisma.generationUsage.upsert({
+      where: { vendorId_assetType: { vendorId, assetType: body.assetType } },
+      create: { vendorId, assetType: body.assetType },
+      update: {},
+    })
+    const preview = consumeGenerationQuota(usage)
+    if (preview.billedAs === 'PAID') {
+      await assertKyc(vendorId, 'ACTIVE_VENDOR')
+    }
 
     const reservation = await prisma.$transaction(async (tx) => {
       const usage = await tx.generationUsage.upsert({
@@ -113,6 +123,7 @@ router.post(
   '/topup',
   asyncHandler(async (req, res) => {
     const vendorId = req.tenantId!
+    await assertKyc(vendorId, 'ACTIVE_VENDOR')
     const body = z
       .object({
         assetType: assetTypeSchema,

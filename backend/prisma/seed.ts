@@ -74,6 +74,11 @@ async function main() {
       logo: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&h=200&fit=crop',
       isActive: true,
       isApproved: true,
+      city: 'Sandton',
+      province: 'Gauteng',
+      postalCode: '2196',
+      lat: -26.1076,
+      lng: 28.0567,
     },
     create: {
       userId: vendorUser.id,
@@ -83,6 +88,11 @@ async function main() {
       logo: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&h=200&fit=crop',
       isActive: true,
       isApproved: true,
+      city: 'Sandton',
+      province: 'Gauteng',
+      postalCode: '2196',
+      lat: -26.1076,
+      lng: 28.0567,
       commissionRate: 10,
       settings: {
         theme: { primaryColor: '#2563eb', secondaryColor: '#6b7280', fontFamily: 'Inter' },
@@ -98,6 +108,11 @@ async function main() {
       isActive: true,
       isApproved: true,
       logo: 'https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=200&h=200&fit=crop',
+      city: 'Cape Town',
+      province: 'Western Cape',
+      postalCode: '8001',
+      lat: -33.9249,
+      lng: 18.4241,
     },
     create: {
       userId: harborUser.id,
@@ -107,6 +122,11 @@ async function main() {
       logo: 'https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=200&h=200&fit=crop',
       isActive: true,
       isApproved: true,
+      city: 'Cape Town',
+      province: 'Western Cape',
+      postalCode: '8001',
+      lat: -33.9249,
+      lng: 18.4241,
       commissionRate: 12,
       settings: {
         theme: { primaryColor: '#0f766e', secondaryColor: '#134e4a', fontFamily: 'Inter' },
@@ -125,6 +145,11 @@ async function main() {
       isActive: true,
       isApproved: true,
       commissionRate: 12,
+      city: 'Durban',
+      province: 'KwaZulu-Natal',
+      postalCode: '4001',
+      lat: -29.8587,
+      lng: 31.0218,
     },
     create: {
       userId: northlineUser.id,
@@ -134,6 +159,11 @@ async function main() {
       logo: 'https://images.unsplash.com/photo-1539085023575-5c9ad6c0f15a?w=200&h=200&fit=crop',
       isActive: true,
       isApproved: true,
+      city: 'Durban',
+      province: 'KwaZulu-Natal',
+      postalCode: '4001',
+      lat: -29.8587,
+      lng: 31.0218,
       commissionRate: 12,
       settings: {
         theme: { primaryColor: '#dc2626', secondaryColor: '#78350f', fontFamily: 'Inter' },
@@ -238,7 +268,7 @@ async function main() {
       inventory: 40,
       category: 'Electronics',
       tags: ['gaming', 'keyboard', 'rgb'],
-      images: ['https://images.unsplash.com/photo-1618384887929-16ec33c9ae8c?w=800&q=80'],
+      images: ['https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?w=800&q=80'],
     },
     {
       vendorId: harbor.id,
@@ -317,7 +347,7 @@ async function main() {
       inventory: 35,
       category: 'Outdoor',
       tags: ['multitool', 'survival', 'outdoor'],
-      images: ['https://images.unsplash.com/photo-1533090161767-e9ffd1f2a67b?w=800&q=80'],
+      images: ['https://images.unsplash.com/photo-1504148455328-c376907d081c?w=800&q=80'],
     },
     {
       vendorId: northline.id,
@@ -403,6 +433,29 @@ async function main() {
     } else {
       await prisma.adCampaign.create({ data })
     }
+  }
+
+  for (const vendorId of [acme.id, harbor.id, northline.id]) {
+    await prisma.vendorKyc.upsert({
+      where: { vendorId },
+      update: {
+        approvedTier: 'ENTERPRISE',
+        requestedTier: 'ENTERPRISE',
+        status: 'APPROVED',
+        legalName: 'Seeded merchant',
+        selfieCaptured: true,
+        reviewedAt: now,
+      },
+      create: {
+        vendorId,
+        approvedTier: 'ENTERPRISE',
+        requestedTier: 'ENTERPRISE',
+        status: 'APPROVED',
+        legalName: 'Seeded merchant',
+        selfieCaptured: true,
+        reviewedAt: now,
+      },
+    })
   }
 
   console.log('Seeded marketplace:', {

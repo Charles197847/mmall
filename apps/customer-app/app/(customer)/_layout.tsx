@@ -59,6 +59,7 @@ export default function CustomerLayout() {
         options={{
           title: 'Cart',
           headerShown: false,
+          tabBarAccessibilityLabel: cartCount ? `Cart, ${cartCount} items` : 'Cart',
           tabBarIcon: ({ color, size }) => (
             <View>
               <Feather name="shopping-bag" size={size} color={color} />

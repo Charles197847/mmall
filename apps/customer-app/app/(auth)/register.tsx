@@ -36,6 +36,7 @@ export default function RegisterScreen() {
         placeholderTextColor={mmall.mute}
         value={firstName}
         onChangeText={setFirstName}
+        accessibilityLabel="First name"
       />
       <TextInput
         className="bg-panel rounded-2xl px-4 py-3 mb-3 text-ice"
@@ -43,6 +44,7 @@ export default function RegisterScreen() {
         placeholderTextColor={mmall.mute}
         value={lastName}
         onChangeText={setLastName}
+        accessibilityLabel="Last name"
       />
       <TextInput
         className="bg-panel rounded-2xl px-4 py-3 mb-3 text-ice"
@@ -51,6 +53,7 @@ export default function RegisterScreen() {
         autoCapitalize="none"
         value={email}
         onChangeText={setEmail}
+        accessibilityLabel="Email"
       />
       <TextInput
         className="bg-panel rounded-2xl px-4 py-3 mb-6 text-ice"
@@ -59,8 +62,15 @@ export default function RegisterScreen() {
         secureTextEntry
         value={password}
         onChangeText={setPassword}
+        accessibilityLabel="Password"
       />
-      <Pressable className="bg-brand rounded-2xl py-3" onPress={onSubmit} disabled={loading}>
+      <Pressable
+        className="bg-brand rounded-2xl py-3"
+        onPress={onSubmit}
+        disabled={loading}
+        accessibilityRole="button"
+        accessibilityLabel="Create account"
+      >
         <Text className="text-white text-center font-bold">{loading ? 'Creating...' : 'Create account'}</Text>
       </Pressable>
     </Screen>

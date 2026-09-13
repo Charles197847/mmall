@@ -15,6 +15,7 @@ export type ProductFormData = {
   category: string
   tags: string[]
   images: string[]
+  isActive?: boolean
 }
 
 type FormValues = {
@@ -25,6 +26,7 @@ type FormValues = {
   inventory: number
   category: string
   tags: string
+  isActive: boolean
 }
 
 interface ProductFormProps {
@@ -51,6 +53,7 @@ export function ProductForm({ initialData, onSubmit, onCancel }: ProductFormProp
       inventory: initialData?.inventory ?? 0,
       category: initialData?.category ?? '',
       tags: initialData?.tags?.join(', ') ?? '',
+      isActive: initialData?.isActive ?? false,
     },
   })
 
@@ -103,6 +106,7 @@ export function ProductForm({ initialData, onSubmit, onCancel }: ProductFormProp
       category: data.category,
       tags,
       images,
+      isActive: data.isActive,
     })
   }
 
@@ -221,6 +225,16 @@ export function ProductForm({ initialData, onSubmit, onCancel }: ProductFormProp
             ))}
           </div>
         </div>
+
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" className="mt-1" {...register('isActive')} />
+          <span>
+            Publish live on the mall
+            <span className="block text-slate-500 text-xs mt-0.5">
+              Drafts are free on Explorer. Going live needs Active Vendor verification.
+            </span>
+          </span>
+        </label>
 
         <div className="flex gap-3 pt-2">
           <button

@@ -9,6 +9,8 @@ export interface User {
   firstName: string
   lastName: string
   role: Role
+  phone?: string | null
+  deliveryAddress?: Address | null
 }
 
 export interface AuthResponse {
@@ -42,10 +44,62 @@ export interface Vendor {
   isApproved: boolean
   commissionRate: number
   stripeAccountId?: string | null
+  paygateBeneficiaryId?: string | null
   settings: VendorSettings | null
+  city?: string | null
+  province?: string | null
+  postalCode?: string | null
+  lat?: number | null
+  lng?: number | null
   createdAt?: string
   user?: Pick<User, 'email' | 'firstName' | 'lastName'>
   products?: Product[]
+  kyc?: VendorKyc | null
+}
+
+export type KycTier = 'EXPLORER' | 'ACTIVE_VENDOR' | 'ENTERPRISE'
+export type KycStatus = 'NOT_STARTED' | 'PENDING' | 'APPROVED' | 'REJECTED'
+export type IdentityType = 'SA_ID_CARD' | 'SA_GREEN_BOOK' | 'PASSPORT'
+
+export interface VendorKyc {
+  approvedTier: KycTier
+  requestedTier: KycTier
+  status: KycStatus
+  identityType: string | null
+  legalName: string | null
+  idNumber: string | null
+  residentialAddress: string | null
+  idDocumentName: string | null
+  addressDocumentName: string | null
+  selfieCaptured: boolean
+  cipcDocumentName: string | null
+  taxNumber: string | null
+  vatNumber: string | null
+  bankProofName: string | null
+  rejectionReason: string | null
+  reviewEtaMinutes: number
+  provider: string
+  submittedAt: string | null
+  reviewedAt: string | null
+}
+
+export interface ProductOption {
+  name: string
+  values: string[]
+}
+
+export interface ProductSpec {
+  label: string
+  value: string
+}
+
+export interface ProductReview {
+  id: string
+  rating: number
+  title?: string | null
+  content: string
+  author: string
+  createdAt: string
 }
 
 export interface Product {
@@ -63,7 +117,12 @@ export interface Product {
   isActive: boolean
   rating?: number
   reviewCount?: number
-  vendor?: Pick<Vendor, 'storeName' | 'slug' | 'logo' | 'id'>
+  vendor?: Pick<Vendor, 'storeName' | 'slug' | 'logo' | 'id' | 'city' | 'province' | 'lat' | 'lng'>
+  options?: ProductOption[]
+  specs?: ProductSpec[]
+  styleNotes?: string | null
+  fromShop?: string | null
+  reviews?: ProductReview[]
 }
 
 export interface Paginated<T> {
@@ -106,6 +165,7 @@ export interface VendorOrder {
   feeBreakdown?: FeeBreakdown | null
   shippingCarrier?: string | null
   trackingNumber?: string | null
+  shipments?: Shipment[]
 }
 
 export interface Order {
@@ -118,11 +178,15 @@ export interface Order {
   shippingTotal: number
   discountTotal: number
   paymentIntentId?: string | null
+  payRequestId?: string | null
+  paygateTransactionId?: string | null
+  paymentMethod?: string | null
   paymentStatus: PaymentStatus
   shippingAddress: Address
   billingAddress?: Address | null
   items?: OrderItem[]
   vendorOrders?: VendorOrder[]
+  paygate?: PaygateInitiateResponse
   customer?: Pick<User, 'email' | 'firstName' | 'lastName'>
   createdAt?: string
 }
@@ -216,6 +280,7 @@ export interface VendorAnalytics {
 }
 
 export interface VendorOrderRow extends VendorOrder {
+  shipments?: Shipment[]
   order?: {
     id: string
     createdAt: string
@@ -224,9 +289,54 @@ export interface VendorOrderRow extends VendorOrder {
   }
 }
 
-export interface PaymentIntentResponse {
-  clientSecret: string | null
-  paymentIntentId: string
+export type ShipmentStatus =
+  | 'BOOKED'
+  | 'COLLECTED'
+  | 'IN_TRANSIT'
+  | 'OUT_FOR_DELIVERY'
+  | 'DELIVERED'
+  | 'FAILED'
+
+export interface ShipmentEvent {
+  status: string
+  description: string
+  at: string
+  location?: string
+}
+
+export interface Shipment {
+  id: string
+  vendorOrderId: string
+  carrier: string
+  serviceLevelCode: string
+  serviceName: string
+  trackingNumber: string
+  amount: number
+  currency: string
+  status: ShipmentStatus
+  estimatedDays: number
+  events: ShipmentEvent[]
+}
+
+export interface ShippingQuote {
+  carrier: 'THE_COURIER_GUY'
+  serviceLevelCode: 'ECO' | 'OVN' | 'SDD'
+  serviceName: string
+  amount: number
+  currency: 'ZAR'
+  estimatedDays: number
+  available: boolean
+  note: string
+}
+
+export interface PaygateInitiateResponse {
+  PAYGATE_ID: string
+  PAY_REQUEST_ID: string
+  REFERENCE: string
+  CHECKSUM: string
+  AMOUNT: number
+  CURRENCY: string
+  checkoutUrl: string
 }
 
 export const FREE_GENERATIONS_PER_ASSET = 5
@@ -301,3 +411,5 @@ export function formatMoney(amount: number, currency = 'ZAR') {
   if (currency === 'GBP') return `£${value.toFixed(2)}`
   return `$${value.toFixed(2)}`
 }
+
+export * from './saPlaces'

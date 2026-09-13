@@ -8,20 +8,24 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  firstName    String   @map("first_name")
-  lastName     String   @map("last_name")
-  role         Role     @default(CUSTOMER)
-  passwordHash String   @map("password_hash")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id              String    @id @default(cuid())
+  email           String    @unique
+  firstName       String    @map("first_name")
+  lastName        String    @map("last_name")
+  phone           String?   @unique
+  phoneVerifiedAt DateTime? @map("phone_verified_at")
+  role            Role      @default(CUSTOMER)
+  passwordHash    String    @map("password_hash")
+  deliveryAddress Json?     @map("delivery_address")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   vendorProfile Vendor?
   orders        Order[]
   reviews       Review[]
   deviceTokens  DeviceToken[]
   notifications Notification[]
+  passkeys      PasskeyCredential[]
 
   @@map("users")
 }
@@ -36,9 +40,15 @@ model Vendor {
   coverImage       String?  @map("cover_image")
   isActive         Boolean  @default(false) @map("is_active")
   isApproved       Boolean  @default(false) @map("is_approved")
-  commissionRate   Float    @default(10.0) @map("commission_rate")
-  stripeAccountId  String?  @map("stripe_account_id")
-  settings         Json?
+  commissionRate         Float    @default(10.0) @map("commission_rate")
+  stripeAccountId        String?  @map("stripe_account_id")
+  paygateBeneficiaryId   String?  @map("paygate_beneficiary_id")
+  settings               Json?
+  city                   String?
+  province               String?
+  postalCode             String?  @map("postal_code")
+  lat                    Float?
+  lng                    Float?
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
@@ -49,6 +59,7 @@ model Vendor {
   generationUsages GenerationUsage[]
   generationJobs   GenerationJob[]
   adCampaigns      AdCampaign[]
+  kyc              VendorKyc?
 
   @@map("vendors")
 }
@@ -92,8 +103,11 @@ model Order {
   tax             Float         @default(0)
   shippingTotal   Float         @default(0) @map("shipping_total")
   discountTotal   Float         @default(0) @map("discount_total")
-  paymentIntentId String?       @map("payment_intent_id")
-  paymentStatus   PaymentStatus @default(PENDING) @map("payment_status")
+  paymentIntentId      String?       @map("payment_intent_id")
+  payRequestId         String?       @unique @map("pay_request_id")
+  paygateTransactionId String?       @map("paygate_transaction_id")
+  paymentMethod        String?       @map("payment_method")
+  paymentStatus        PaymentStatus @default(PENDING) @map("payment_status")
   shippingAddress Json          @map("shipping_address")
   billingAddress  Json?         @map("billing_address")
   createdAt       DateTime      @default(now()) @map("created_at")
@@ -141,8 +155,9 @@ model VendorOrder {
   shippedAt       DateTime?         @map("shipped_at")
   deliveredAt     DateTime?         @map("delivered_at")
 
-  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  vendor Vendor @relation(fields: [vendorId], references: [id])
+  order     Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  vendor    Vendor     @relation(fields: [vendorId], references: [id])
+  shipments Shipment[]
 
   @@index([orderId])
   @@index([vendorId])
@@ -195,6 +210,38 @@ enum VendorOrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+enum ShipmentStatus {
+  BOOKED
+  COLLECTED
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+}
+
+model Shipment {
+  id                String         @id @default(cuid())
+  vendorOrderId     String         @map("vendor_order_id")
+  carrier           String         @default("THE_COURIER_GUY")
+  serviceLevelCode  String         @map("service_level_code")
+  serviceName       String         @map("service_name")
+  trackingNumber    String         @unique @map("tracking_number")
+  amount            Float
+  currency          String         @default("ZAR")
+  status            ShipmentStatus @default(BOOKED)
+  collectionAddress Json           @map("collection_address")
+  deliveryAddress   Json           @map("delivery_address")
+  estimatedDays     Int            @map("estimated_days")
+  events            Json
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+
+  vendorOrder VendorOrder @relation(fields: [vendorOrderId], references: [id], onDelete: Cascade)
+
+  @@index([vendorOrderId])
+  @@map("shipments")
 }
 
 enum GenerationAssetType {
@@ -314,4 +361,84 @@ model Notification {
 
   @@index([userId])
   @@map("notifications")
+}
+
+enum KycTier {
+  EXPLORER
+  ACTIVE_VENDOR
+  ENTERPRISE
+}
+
+enum KycStatus {
+  NOT_STARTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum IdentityType {
+  SA_ID_CARD
+  SA_GREEN_BOOK
+  PASSPORT
+}
+
+model PhoneOtp {
+  id         String    @id @default(cuid())
+  phone      String
+  codeHash   String    @map("code_hash")
+  expiresAt  DateTime  @map("expires_at")
+  attempts   Int       @default(0)
+  verifiedAt DateTime? @map("verified_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([phone])
+  @@map("phone_otps")
+}
+
+model VendorKyc {
+  id                  String        @id @default(cuid())
+  vendorId            String        @unique @map("vendor_id")
+  approvedTier        KycTier       @default(EXPLORER) @map("approved_tier")
+  requestedTier       KycTier       @default(ACTIVE_VENDOR) @map("requested_tier")
+  status              KycStatus     @default(NOT_STARTED)
+  identityType        IdentityType? @map("identity_type")
+  legalName           String?       @map("legal_name")
+  idNumber            String?       @map("id_number")
+  residentialAddress  String?       @map("residential_address")
+  idDocumentName      String?       @map("id_document_name")
+  addressDocumentName String?       @map("address_document_name")
+  selfieCaptured      Boolean       @default(false) @map("selfie_captured")
+  cipcDocumentName    String?       @map("cipc_document_name")
+  taxNumber           String?       @map("tax_number")
+  vatNumber           String?       @map("vat_number")
+  bankProofName       String?       @map("bank_proof_name")
+  rejectionReason     String?       @map("rejection_reason")
+  reviewEtaMinutes    Int           @default(30) @map("review_eta_minutes")
+  provider            String        @default("smileid")
+  providerRef         String?       @map("provider_ref")
+  submittedAt         DateTime?     @map("submitted_at")
+  reviewedAt          DateTime?     @map("reviewed_at")
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@map("vendor_kyc")
+}
+
+model PasskeyCredential {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  credentialId String   @unique @map("credential_id")
+  publicKey    String   @map("public_key")
+  counter      BigInt   @default(0)
+  deviceType   String   @default("singleDevice") @map("device_type")
+  backedUp     Boolean  @default(false) @map("backed_up")
+  transports   String[] @default([])
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("passkey_credentials")
 }

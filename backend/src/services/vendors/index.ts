@@ -3,7 +3,6 @@ import { z } from 'zod'
 import { prisma } from '../../shared/database/index.js'
 import { requireAuth, requireAdmin, requireVendor } from '../../shared/middleware/auth.js'
 import { asyncHandler } from '../../shared/middleware/error.js'
-import { queue } from '../../shared/queue/index.js'
 import { toSlug } from '../../shared/utils/slug.js'
 import { asJson, routeParam } from '../../shared/utils/http.js'
 import { readPlatformSettings } from '../../shared/platform-settings.js'
@@ -85,6 +84,11 @@ router.put(
         description: req.body.description,
         logo: req.body.logo,
         coverImage: req.body.coverImage,
+        city: req.body.city,
+        province: req.body.province,
+        postalCode: req.body.postalCode,
+        lat: req.body.lat,
+        lng: req.body.lng,
         settings: req.body.settings ? asJson(req.body.settings) : undefined,
       },
     })
@@ -123,7 +127,6 @@ router.post(
       })
     })
 
-    await queue.add('vendor:create-stripe-account', { vendorId: vendor.id })
     res.status(201).json(vendor)
   }),
 )
@@ -140,6 +143,11 @@ router.get(
         description: true,
         logo: true,
         coverImage: true,
+        city: true,
+        province: true,
+        postalCode: true,
+        lat: true,
+        lng: true,
       },
     })
     res.json(vendors)

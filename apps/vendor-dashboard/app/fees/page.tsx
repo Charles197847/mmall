@@ -1,13 +1,19 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { formatMoney } from '@shopping-mall/shared-types'
 import { api } from '../../lib/api'
+import { useVendor } from '../../hooks/useVendor'
+import { KycActionNotice, KycBanner } from '../../components/kyc/KycBanner'
 
 export default function FeesPage() {
+  const { kyc, vendor } = useVendor()
   const { data: pricing, isLoading } = useQuery({
     queryKey: ['vendor-pricing'],
     queryFn: () => api.vendors.pricing(),
+  })
+  const payouts = useMutation({
+    mutationFn: () => api.payments.registerPayout(),
   })
 
   if (isLoading || !pricing) {
@@ -22,6 +28,29 @@ export default function FeesPage() {
         <h1 className="text-2xl font-bold">Pricing & fees</h1>
         <p className="text-mute mt-1">How your MMall shop is billed and how each sale is settled.</p>
       </div>
+      <KycBanner kyc={kyc} />
+
+      <section className="bg-white rounded-lg shadow p-6 space-y-3">
+        <h2 className="font-semibold">Bank payouts</h2>
+        <p className="text-sm text-slate-600">
+          Payouts need Enterprise verification (CIPC, tax, and a matching bank letter). MMall then settles vendors with PayGate PayBatch EFT — not Stripe.
+        </p>
+        {vendor?.paygateBeneficiaryId || payouts.isSuccess ? (
+          <p className="text-sm text-emerald-700">
+            PayBatch beneficiary {payouts.data?.beneficiaryId ?? vendor?.paygateBeneficiaryId} is registered. Weekly EFTs use the verified bank account.
+          </p>
+        ) : (
+          <button
+            type="button"
+            disabled={payouts.isPending}
+            onClick={() => payouts.mutate()}
+            className="bg-brand text-white px-4 py-2 rounded-xl disabled:opacity-50"
+          >
+            {payouts.isPending ? 'Registering PayBatch…' : 'Register PayGate payout account'}
+          </button>
+        )}
+        {payouts.isError ? <KycActionNotice error={payouts.error} /> : null}
+      </section>
 
       <section className="bg-white rounded-lg shadow p-6">
         <h2 className="font-semibold mb-2">Store subscription</h2>

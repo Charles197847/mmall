@@ -1,5 +1,5 @@
 import { Platform } from 'react-native'
-import type { AdPlacement, AppNotification, Order, Paginated, Product, User, Vendor } from '@shopping-mall/shared-types'
+import type { AdPlacement, AppNotification, Order, Paginated, Product, ShippingQuote, User, Vendor } from '@shopping-mall/shared-types'
 
 function getBaseUrl() {
   if (process.env.EXPO_PUBLIC_API_URL) {
@@ -11,7 +11,7 @@ function getBaseUrl() {
   return 'http://10.0.2.2:4000/api/v1'
 }
 
-const API_BASE = getBaseUrl()
+export const API_BASE = getBaseUrl()
 
 const getHeaders = (token?: string) => {
   const headers: Record<string, string> = {
@@ -67,6 +67,50 @@ export const api = {
       request<User & { vendor?: Vendor | null }>('/auth/me', {
         headers: getHeaders(token),
       }),
+    updateAddress: (
+      body: {
+        fullName?: string
+        line1?: string
+        street?: string
+        city: string
+        state?: string
+        postalCode: string
+        country?: string
+      },
+      token: string,
+    ) =>
+      request<User>('/auth/address', {
+        method: 'PATCH',
+        headers: getHeaders(token),
+        body: JSON.stringify(body),
+      }),
+    passkeyRegisterOptions: (token: string) =>
+      request<Record<string, unknown>>('/auth/passkeys/register/options', {
+        method: 'POST',
+        headers: getHeaders(token),
+      }),
+    passkeyRegisterVerify: (body: unknown, token: string) =>
+      request<{ ok: boolean }>('/auth/passkeys/register/verify', {
+        method: 'POST',
+        headers: getHeaders(token),
+        body: JSON.stringify(body),
+      }),
+    passkeyAuthOptions: (email?: string) =>
+      request<Record<string, unknown>>('/auth/passkeys/authenticate/options', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ email }),
+      }),
+    passkeyAuthVerify: (body: unknown) =>
+      request<AuthResponse>('/auth/passkeys/authenticate/verify', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(body),
+      }),
+    passkeys: (token: string) =>
+      request<{ items: Array<{ id: string; createdAt: string; backedUp: boolean }> }>('/auth/passkeys', {
+        headers: getHeaders(token),
+      }),
   },
 
   products: {
@@ -106,6 +150,18 @@ export const api = {
     list: (token: string) => request<Order[]>('/orders', { headers: getHeaders(token) }),
     get: (id: string, token: string) =>
       request<Order>(`/orders/${id}`, { headers: getHeaders(token) }),
+  },
+
+  shipping: {
+    quote: (body: {
+      items: Array<{ productId: string; quantity: number }>
+      address: { city: string; postalCode?: string; street?: string; state?: string }
+    }) =>
+      request<{ quotes: ShippingQuote[]; weightKg: number }>(
+        '/shipping/quote',
+        { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) },
+      ),
+    track: (trackingNumber: string) => request(`/shipping/track/${trackingNumber}`),
   },
 
   user: {

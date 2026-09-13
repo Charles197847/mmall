@@ -3,12 +3,15 @@ import { Platform } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { User } from '@shopping-mall/shared-types'
 import { api } from '../api'
+import { createPasskey, getPasskey, passkeysAvailable } from '../passkeys'
 
 interface AuthContextType {
   user: User | null
   token: string | null
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
+  loginWithPasskey: (email?: string) => Promise<void>
+  registerPasskey: () => Promise<void>
   register: (data: { email: string; password: string; firstName: string; lastName: string }) => Promise<void>
   logout: () => Promise<void>
 }
@@ -45,16 +48,44 @@ export function AuthProvider({ children }: PropsWithChildren) {
       .catch(() => undefined)
   }, [user, token])
 
+  const persist = async (nextToken: string, nextUser: User) => {
+    setToken(nextToken)
+    setUser(nextUser)
+    await AsyncStorage.setItem('auth_token', nextToken)
+    await AsyncStorage.setItem('auth_user', JSON.stringify(nextUser))
+  }
+
   const login = async (email: string, password: string) => {
     const response = await api.auth.login(email, password)
     if (response.token) {
-      setToken(response.token)
-      setUser(response.user)
-      await AsyncStorage.setItem('auth_token', response.token)
-      await AsyncStorage.setItem('auth_user', JSON.stringify(response.user))
+      try {
+        const me = await api.auth.me(response.token)
+        await persist(response.token, me)
+      } catch {
+        await persist(response.token, response.user)
+      }
     } else {
       throw new Error(response.error || 'Login failed')
     }
+  }
+
+  const loginWithPasskey = async (email?: string) => {
+    if (!passkeysAvailable()) {
+      throw new Error('Passkeys work in the browser on this device.')
+    }
+    const options = await api.auth.passkeyAuthOptions(email)
+    const assertion = await getPasskey(options)
+    const response = await api.auth.passkeyAuthVerify({ response: assertion, email })
+    if (!response.token) throw new Error(response.error || 'Passkey sign-in failed')
+    await persist(response.token, response.user)
+  }
+
+  const registerPasskey = async () => {
+    if (!token) throw new Error('Sign in first')
+    if (!passkeysAvailable()) throw new Error('Passkeys work in the browser on this device.')
+    const options = await api.auth.passkeyRegisterOptions(token)
+    const attestation = await createPasskey(options)
+    await api.auth.passkeyRegisterVerify(attestation, token)
   }
 
   const register = async (data: { email: string; password: string; firstName: string; lastName: string }) => {
@@ -77,7 +108,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, loginWithPasskey, registerPasskey, register, logout }}>
       {children}
     </AuthContext.Provider>
   )

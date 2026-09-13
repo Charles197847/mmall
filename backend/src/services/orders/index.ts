@@ -7,6 +7,9 @@ import { queue } from '../../shared/queue/index.js'
 import { asJson, routeParam } from '../../shared/utils/http.js'
 import { settleVendorSale } from '../../shared/fees.js'
 import { readPlatformSettings } from '../../shared/platform-settings.js'
+import { initiatePaygate } from '../paygate/index.js'
+import { pickQuote, quoteForCart } from '../courier/index.js'
+import { publishGrid } from '../../shared/events.js'
 
 const router = Router()
 
@@ -21,6 +24,7 @@ const createOrderSchema = z.object({
     .min(1),
   shippingAddress: z.record(z.unknown()),
   billingAddress: z.record(z.unknown()).optional(),
+  shippingServiceCode: z.enum(['ECO', 'OVN', 'SDD']).default('ECO'),
 })
 
 router.post(
@@ -28,7 +32,7 @@ router.post(
   requireAuth,
   asyncHandler(async (req, res) => {
     const customerId = req.user!.id
-    const { items, shippingAddress, billingAddress } = createOrderSchema.parse(req.body)
+    const { items, shippingAddress, billingAddress, shippingServiceCode } = createOrderSchema.parse(req.body)
 
     const fees = readPlatformSettings()
     const vendorGroups = new Map<
@@ -83,6 +87,13 @@ router.post(
       group.subtotal += itemTotal
     }
 
+    const shippingQuote = await quoteForCart(
+      items,
+      shippingAddress as { city?: string; postalCode?: string; street?: string; line1?: string },
+    )
+    const selectedShipping = pickQuote(shippingQuote.quotes, shippingServiceCode)
+    const shippingTotal = selectedShipping.amount
+
     const vendorOrders = Array.from(vendorGroups.values()).map((group) => {
       const settlement = settleVendorSale({
         items: group.items,
@@ -100,11 +111,17 @@ router.post(
       const newOrder = await tx.order.create({
         data: {
           customerId,
-          totalAmount: subtotal,
+          totalAmount: subtotal + shippingTotal,
           subtotal,
+          shippingTotal,
           status: 'PENDING',
           paymentStatus: 'PENDING',
-          shippingAddress: asJson(shippingAddress),
+          shippingAddress: asJson({
+            ...shippingAddress,
+            shippingServiceCode,
+            shippingServiceName: selectedShipping.serviceName,
+            carrier: 'THE_COURIER_GUY',
+          }),
           billingAddress: asJson(billingAddress ?? shippingAddress),
         },
       })
@@ -150,11 +167,16 @@ router.post(
       return newOrder
     })
 
-    await queue.add('payment:process', { orderId: order.id })
     await queue.add('notification:order-confirmation', { orderId: order.id })
     await queue.add('notification:vendor-order', { orderId: order.id })
+    publishGrid({
+      type: 'inventory',
+      payload: { productIds: items.map((item) => item.productId), orderId: order.id },
+    })
+    publishGrid({ type: 'order', payload: { orderId: order.id } })
+    const paygate = await initiatePaygate(order.id)
 
-    res.status(201).json(order)
+    res.status(201).json({ ...order, shippingTotal, paygate })
   }),
 )
 
@@ -175,6 +197,7 @@ router.get(
               customer: { select: { firstName: true, lastName: true, email: true } },
             },
           },
+          shipments: true,
         },
         orderBy: { order: { createdAt: 'desc' } },
       })
@@ -215,7 +238,7 @@ router.get(
             product: { include: { vendor: true } },
           },
         },
-        vendorOrders: { include: { vendor: true } },
+        vendorOrders: { include: { vendor: true, shipments: true } },
       },
     })
 

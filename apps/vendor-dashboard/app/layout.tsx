@@ -11,7 +11,7 @@ const themeBoot = `(function(){try{var m=localStorage.getItem('mmall-color-mode'
 export const metadata: Metadata = {
   title: 'Vendor · MMall',
   description: 'Operate your store on the MMall commerce grid.',
-  icons: { icon: '/icon.png' },
+  icons: { icon: '/mmall-bag.png' },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

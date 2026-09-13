@@ -13,6 +13,7 @@ export function ThemeToggle() {
       onPress={toggle}
       accessibilityRole="button"
       accessibilityLabel={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      accessibilityState={{ checked: mode === 'dark' }}
       className="w-11 h-11 rounded-full bg-panel items-center justify-center"
     >
       <Feather name={mode === 'dark' ? 'sun' : 'moon'} size={18} color={colors.glow} />

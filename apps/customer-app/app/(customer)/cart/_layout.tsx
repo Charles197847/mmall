@@ -8,6 +8,7 @@ export default function CartLayout() {
     <Stack screenOptions={headerOptions(mode)}>
       <Stack.Screen name="index" options={{ title: 'Cart' }} />
       <Stack.Screen name="checkout" options={{ title: 'Checkout' }} />
+      <Stack.Screen name="payment-return" options={{ title: 'PayGate' }} />
     </Stack>
   )
 }

@@ -5,9 +5,10 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { useVendor } from '../hooks/useVendor'
 import { api } from '../lib/api'
 import { MetricCard } from '../components/dashboard/MetricCard'
+import { KycBanner } from '../components/kyc/KycBanner'
 
 export default function DashboardPage() {
-  const { vendor } = useVendor()
+  const { vendor, kyc } = useVendor()
   const { data: stats, isLoading } = useQuery({
     queryKey: ['vendor-analytics'],
     queryFn: () => api.vendors.analytics(),
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6 tracking-tight">Store pulse</h1>
+      <KycBanner kyc={kyc} />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <MetricCard title="Total Revenue" value={`R${(stats?.totalRevenue ?? 0).toFixed(2)}`} />

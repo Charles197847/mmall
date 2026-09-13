@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, Text, View } from 'react-native'
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native'
 import { Link, router } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../../../lib/auth/AuthProvider'
@@ -8,7 +8,7 @@ import { useThemeStore } from '../../../stores/themeStore'
 import { api } from '../../../lib/api'
 
 export default function ProfileScreen() {
-  const { user, logout, token } = useAuth()
+  const { user, logout, token, registerPasskey } = useAuth()
   const mode = useThemeStore((state) => state.mode)
   const { data: notes } = useQuery({
     queryKey: ['notifications', token],
@@ -34,8 +34,25 @@ export default function ProfileScreen() {
           <Pressable
             className="bg-brand rounded-2xl py-3 mb-3"
             onPress={() => router.push('/(customer)/orders')}
+            accessibilityRole="button"
+            accessibilityLabel="View orders"
           >
             <Text className="text-white text-center font-bold">View orders</Text>
+          </Pressable>
+          <Pressable
+            className="bg-navy rounded-2xl py-3 mb-3"
+            accessibilityRole="button"
+            accessibilityLabel="Add a passkey for this device"
+            onPress={async () => {
+              try {
+                await registerPasskey()
+                Alert.alert('Passkey saved', 'Next time you can sign in without a password.')
+              } catch (error) {
+                Alert.alert('Passkey', error instanceof Error ? error.message : 'Could not add passkey')
+              }
+            }}
+          >
+            <Text className="text-glow text-center font-bold">Add passkey to this device</Text>
           </Pressable>
           <Pressable
             className="bg-navy rounded-2xl py-3 border border-signal/40"

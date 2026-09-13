@@ -2,10 +2,11 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../../shared/database/index.js'
 import { requireAuth, requireVendor } from '../../shared/middleware/auth.js'
-import { asyncHandler } from '../../shared/middleware/error.js'
+import { asyncHandler, HttpError } from '../../shared/middleware/error.js'
 import { queue } from '../../shared/queue/index.js'
 import { uniqueSlug } from '../../shared/utils/slug.js'
 import { asJson, routeParam } from '../../shared/utils/http.js'
+import { assertKyc, EXPLORER_PRODUCT_LIMIT, ensureVendorKyc } from '../../shared/kyc.js'
 
 const router = Router()
 
@@ -57,7 +58,7 @@ router.get(
         where,
         include: {
           vendor: {
-            select: { storeName: true, slug: true, logo: true },
+            select: { storeName: true, slug: true, logo: true, city: true, province: true, lat: true, lng: true },
           },
           reviews: { select: { rating: true } },
         },
@@ -104,7 +105,7 @@ router.get(
       where: { id: routeParam(req.params.id) },
       include: {
         vendor: {
-          select: { storeName: true, slug: true, logo: true, id: true },
+          select: { storeName: true, slug: true, logo: true, id: true, city: true, province: true, lat: true, lng: true },
         },
         reviews: {
           include: {
@@ -136,10 +137,27 @@ router.post(
   asyncHandler(async (req, res) => {
     const vendorId = req.tenantId!
     const body = productSchema.parse(req.body)
+    const kyc = await ensureVendorKyc(vendorId)
+    const live = Boolean(body.isActive)
+    if (live) {
+      await assertKyc(vendorId, 'ACTIVE_VENDOR')
+    }
+    if (kyc.approvedTier === 'EXPLORER') {
+      const count = await prisma.product.count({ where: { vendorId } })
+      if (count >= EXPLORER_PRODUCT_LIMIT) {
+        throw new HttpError(403, 'Explorer accounts can keep 2 draft listings. Verify to publish more.', {
+          code: 'KYC_REQUIRED',
+          requiredTier: 'ACTIVE_VENDOR',
+          currentTier: 'EXPLORER',
+          status: kyc.status,
+        })
+      }
+    }
     const product = await prisma.product.create({
       data: {
         vendorId,
         ...body,
+        isActive: live && kyc.approvedTier !== 'EXPLORER',
         dimensions: body.dimensions ? asJson(body.dimensions) : undefined,
         slug: uniqueSlug(body.name),
       },
@@ -162,9 +180,17 @@ router.put(
       return res.status(404).json({ error: 'Product not found' })
     }
 
+    const body = productSchema.partial().parse(req.body)
+    if (body.isActive === true) {
+      await assertKyc(vendorId, 'ACTIVE_VENDOR')
+    }
+
     const product = await prisma.product.update({
       where: { id: routeParam(req.params.id) },
-      data: req.body,
+      data: {
+        ...body,
+        dimensions: body.dimensions ? asJson(body.dimensions) : undefined,
+      },
     })
     await queue.add('search:update-product', { productId: product.id })
     res.json(product)

@@ -6,11 +6,15 @@ import type { Product } from '@shopping-mall/shared-types'
 import { ProductTable } from '../../components/products/ProductTable'
 import { ProductForm, type ProductFormData } from '../../components/products/ProductForm'
 import { api } from '../../lib/api'
+import { useVendor } from '../../hooks/useVendor'
+import { KycActionNotice, KycBanner } from '../../components/kyc/KycBanner'
 
 export default function ProductsPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [formError, setFormError] = useState<unknown>(null)
   const queryClient = useQueryClient()
+  const { kyc } = useVendor()
 
   const { data } = useQuery({
     queryKey: ['vendor-products'],
@@ -44,10 +48,16 @@ export default function ProductsPage() {
   })
 
   const submit = async (form: ProductFormData) => {
-    if (editingProduct) {
-      await updateMutation.mutateAsync({ id: editingProduct.id, data: form })
-    } else {
-      await createMutation.mutateAsync(form)
+    setFormError(null)
+    try {
+      if (editingProduct) {
+        await updateMutation.mutateAsync({ id: editingProduct.id, data: form })
+      } else {
+        await createMutation.mutateAsync(form)
+      }
+    } catch (error) {
+      setFormError(error)
+      throw error
     }
   }
 
@@ -59,6 +69,8 @@ export default function ProductsPage() {
           Add Product
         </button>
       </div>
+      <KycBanner kyc={kyc} />
+      {formError ? <div className="mb-4"><KycActionNotice error={formError} /></div> : null}
       <ProductTable products={data?.items} onEdit={setEditingProduct} onDelete={(id) => deleteMutation.mutate(id)} />
       {showForm || editingProduct ? (
         <ProductForm

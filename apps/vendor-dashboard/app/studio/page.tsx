@@ -4,9 +4,12 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { formatMoney, type GenerationAssetType, type GenerationJob } from '@shopping-mall/shared-types'
 import { api } from '../../lib/api'
+import { useVendor } from '../../hooks/useVendor'
+import { KycActionNotice, KycBanner } from '../../components/kyc/KycBanner'
 
 export default function StudioPage() {
   const queryClient = useQueryClient()
+  const { kyc } = useVendor()
   const [assetType, setAssetType] = useState<GenerationAssetType>('LOGO')
   const [prompt, setPrompt] = useState('Minimal electric-blue mark for a premium marketplace shop named MMall Studio')
   const [selected, setSelected] = useState<GenerationJob | null>(null)
@@ -68,6 +71,9 @@ export default function StudioPage() {
           (~$15) and banners {formatMoney(pricing?.bannerGenerationPrice ?? 599, currency)} (~$30).
         </p>
       </div>
+      <KycBanner kyc={kyc} />
+      {generate.isError ? <KycActionNotice error={generate.error} /> : null}
+      {topup.isError ? <KycActionNotice error={topup.error} /> : null}
 
       <div className="flex gap-2">
         {(['LOGO', 'BANNER'] as const).map((type) => (

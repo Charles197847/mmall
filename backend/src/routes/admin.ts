@@ -30,7 +30,7 @@ router.get(
 
     const vendors = await prisma.vendor.findMany({
       where,
-      include: { user: { select: { email: true, firstName: true, lastName: true } } },
+      include: { user: { select: { email: true, firstName: true, lastName: true } }, kyc: true },
       orderBy: { createdAt: 'desc' },
     })
     res.json(vendors)

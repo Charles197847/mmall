@@ -29,9 +29,12 @@ function Chevron({ direction }: { direction: 'up' | 'down' }) {
 interface OrderListProps {
   orders?: VendorOrderRow[]
   onUpdateStatus: (orderId: string, newStatus: string) => Promise<void>
+  onBookCourier?: (vendorOrderId: string) => Promise<void>
+  onAdvanceShipment?: (shipmentId: string) => Promise<void>
+  busyId?: string | null
 }
 
-export function OrderList({ orders, onUpdateStatus }: OrderListProps) {
+export function OrderList({ orders, onUpdateStatus, onBookCourier, onAdvanceShipment, busyId }: OrderListProps) {
   const [updating, setUpdating] = useState<string | null>(null)
 
   const handleStatusChange = async (parentOrderId: string, status: string) => {
@@ -125,6 +128,32 @@ export function OrderList({ orders, onUpdateStatus }: OrderListProps) {
                   </li>
                 ))}
               </ul>
+              <div className="mt-3 flex flex-wrap gap-2 items-center">
+                {order.trackingNumber ? (
+                  <p className="text-sm text-slate-600">
+                    Courier Guy {order.trackingNumber} · {order.shipments?.[0]?.status.replaceAll('_', ' ')}
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    className="px-3 py-1 rounded-lg bg-brand text-white text-sm"
+                    disabled={busyId === order.id}
+                    onClick={() => void onBookCourier?.(order.id)}
+                  >
+                    Book Courier Guy collection
+                  </button>
+                )}
+                {order.shipments?.[0] && order.shipments[0].status !== 'DELIVERED' ? (
+                  <button
+                    type="button"
+                    className="px-3 py-1 rounded-lg border text-sm"
+                    disabled={busyId === order.shipments[0].id}
+                    onClick={() => void onAdvanceShipment?.(order.shipments![0].id)}
+                  >
+                    Simulate next hop
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
         )

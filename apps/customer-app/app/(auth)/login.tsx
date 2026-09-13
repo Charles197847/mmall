@@ -9,7 +9,7 @@ import { palettes } from '../../lib/theme'
 import { useThemeStore } from '../../stores/themeStore'
 
 export default function LoginScreen() {
-  const { login } = useAuth()
+  const { login, loginWithPasskey } = useAuth()
   const [email, setEmail] = useState('customer@shopping-mall.local')
   const [password, setPassword] = useState('Password123!')
   const [loading, setLoading] = useState(false)
@@ -23,6 +23,18 @@ export default function LoginScreen() {
       router.replace('/(customer)')
     } catch (error) {
       Alert.alert('Login failed', error instanceof Error ? error.message : 'Try again')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const onPasskey = async () => {
+    setLoading(true)
+    try {
+      await loginWithPasskey(email)
+      router.replace('/(customer)')
+    } catch (error) {
+      Alert.alert('Passkey failed', error instanceof Error ? error.message : 'Use password instead')
     } finally {
       setLoading(false)
     }
@@ -44,6 +56,8 @@ export default function LoginScreen() {
         onChangeText={setEmail}
         placeholder="Email"
         placeholderTextColor={colors.mute}
+        accessibilityLabel="Email"
+        autoComplete="email"
       />
       <TextInput
         className="bg-panel rounded-2xl px-4 py-3 mb-6 text-ice"
@@ -52,9 +66,26 @@ export default function LoginScreen() {
         onChangeText={setPassword}
         placeholder="Password"
         placeholderTextColor={colors.mute}
+        accessibilityLabel="Password"
+        autoComplete="password"
       />
-      <Pressable className="bg-brand rounded-2xl py-3" onPress={onSubmit} disabled={loading}>
+      <Pressable
+        className="bg-brand rounded-2xl py-3"
+        onPress={onSubmit}
+        disabled={loading}
+        accessibilityRole="button"
+        accessibilityLabel="Sign in with password"
+      >
         <Text className="text-white text-center font-bold">{loading ? 'Signing in...' : 'Sign in'}</Text>
+      </Pressable>
+      <Pressable
+        className="bg-navy rounded-2xl py-3 mt-3"
+        onPress={onPasskey}
+        disabled={loading}
+        accessibilityRole="button"
+        accessibilityLabel="Sign in with passkey"
+      >
+        <Text className="text-glow text-center font-bold">Sign in with passkey</Text>
       </Pressable>
       <View className="mt-4">
         <Link href="/(auth)/register">

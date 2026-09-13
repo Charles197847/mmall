@@ -1,9 +1,11 @@
 import { useEffect } from 'react'
-import { Image, Text, TouchableOpacity, View } from 'react-native'
+import { Image, Platform, Text, View } from 'react-native'
 import { useQuery } from '@tanstack/react-query'
 import { router } from 'expo-router'
+import Animated, { FadeInDown } from 'react-native-reanimated'
 import type { AdSlot as Slot } from '@shopping-mall/shared-types'
 import { api } from '../../lib/api'
+import { PressScale } from '../ui/PressScale'
 
 export function AdSlot({ slot }: { slot: Slot }) {
   const { data } = useQuery({
@@ -21,21 +23,30 @@ export function AdSlot({ slot }: { slot: Slot }) {
   if (!ad) return null
 
   return (
-    <TouchableOpacity
-      className="mx-4 my-3 bg-panel rounded-2xl overflow-hidden"
+    <Animated.View entering={FadeInDown.duration(420)}>
+    <PressScale
+      accessibilityRole="button"
+      accessibilityLabel={`Sponsored: ${ad.title}${ad.headline ? `. ${ad.headline}` : ''}`}
+      className="mx-4 mt-2 mb-3 bg-panel rounded-2xl overflow-hidden"
       onPress={() => {
         void api.ads.click(ad.id).catch(() => undefined)
         if (ad.vendorSlug) router.push(`/(customer)/vendor/${ad.vendorSlug}`)
       }}
     >
       {ad.imageUrl ? (
-        <Image source={{ uri: ad.imageUrl }} className="w-full h-36 bg-navy" resizeMode="cover" />
+        <Image
+          source={{ uri: ad.imageUrl }}
+          className="bg-navy"
+          style={{ width: '100%', height: Platform.OS === 'web' ? 220 : 144 }}
+          resizeMode="cover"
+        />
       ) : null}
       <View className="p-3">
         <Text className="text-[10px] tracking-widest text-mute">SPONSORED</Text>
         <Text className="text-ice font-bold mt-1">{ad.title}</Text>
         {ad.headline ? <Text className="text-mute text-sm mt-1">{ad.headline}</Text> : null}
       </View>
-    </TouchableOpacity>
+    </PressScale>
+    </Animated.View>
   )
 }

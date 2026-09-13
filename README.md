@@ -14,7 +14,8 @@ Multi-vendor B2B2C e-commerce platform. Vendors run branded stores, customers sh
 | ORM | Prisma |
 | Cache / queue | Redis 7+ · BullMQ |
 | Search | Elasticsearch 8+ |
-| Payments | Stripe Connect |
+| Payments | PayGate PayWeb 3 (mock locally) + PayBatch EFT payouts |
+| Shipping | The Courier Guy mock quotes, waybills, and tracking |
 | Monorepo | Turborepo + pnpm workspaces |
 
 ```
@@ -96,13 +97,13 @@ On this machine, Postgres is mapped to **5433** and the API listens on **4000** 
 | Search | `/api/v1/search` |
 | Health | `http://localhost:4000/health` |
 
-Multi-tenant isolation uses PostgreSQL RLS plus request-scoped `app.tenant_id` / `app.user_id` settings. Stripe Connect handles vendor onboarding and split payouts.
+Multi-tenant isolation uses PostgreSQL RLS plus request-scoped `app.tenant_id` / `app.user_id` settings. PayGate handles customer checkout and vendor EFT payouts. The Courier Guy mock covers collection and tracking.
 
 ## Phase map
 
 1. **Foundation** — monorepo, Docker, Prisma, shared packages, app shells
 2. **Core backend** — RLS, auth, vendor/product/order APIs
-3. **Payments** — Stripe Connect + webhooks
+3. **Payments** — PayGate PayWeb + PayBatch (mocked until live credentials)
 4. **Customer app** — browse, cart, checkout
 5. **Vendor dashboard** — products, orders, store settings
 6. **Admin panel** — approvals and platform analytics

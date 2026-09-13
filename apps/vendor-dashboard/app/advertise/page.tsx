@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { formatMoney, type AdSlot } from '@shopping-mall/shared-types'
 import { api } from '../../lib/api'
+import { useVendor } from '../../hooks/useVendor'
+import { KycActionNotice, KycBanner } from '../../components/kyc/KycBanner'
 
 const slots: Array<{ id: AdSlot; label: string; hint: string }> = [
   { id: 'HOMEPAGE_BANNER', label: 'Homepage banner', hint: 'R1,500 / week' },
@@ -19,6 +21,7 @@ function localInput(date: Date) {
 
 export default function AdvertisePage() {
   const queryClient = useQueryClient()
+  const { kyc } = useVendor()
   const start = useMemo(() => new Date(), [])
   const end = useMemo(() => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), [])
   const [slot, setSlot] = useState<AdSlot>('HOMEPAGE_BANNER')
@@ -81,6 +84,9 @@ export default function AdvertisePage() {
         <h1 className="text-2xl font-bold">Advertise</h1>
         <p className="text-mute mt-1">Buy slots, attach creatives, and track impressions and clicks.</p>
       </div>
+      <KycBanner kyc={kyc} />
+      {create.isError ? <KycActionNotice error={create.error} /> : null}
+      {purchase.isError ? <KycActionNotice error={purchase.error} /> : null}
 
       <section className="grid gap-3 md:grid-cols-2">
         {slots.map((item) => (

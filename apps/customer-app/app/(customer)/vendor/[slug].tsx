@@ -8,11 +8,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import { useLocalSearchParams } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 import type { Product } from '@shopping-mall/shared-types'
 import { api } from '../../../lib/api'
 import { ProductCard } from '../../../components/product/ProductCard'
+import { ProductRail } from '../../../components/product/ProductRail'
 import { useCartStore } from '../../../stores/cartStore'
 import { productImage } from '../../../lib/utils/images'
 import { palettes } from '../../../lib/theme'
@@ -66,13 +67,30 @@ export default function VendorStoreScreen() {
 
   const { data: moreLike } = useQuery({
     queryKey: ['you-might-like', vendor?.id, likeCategory],
-    queryFn: () =>
-      api.products.list({
-        category: likeCategory,
+    queryFn: async () => {
+      const preferred = likeCategory
+        ? await api.products.list({
+            category: likeCategory,
+            excludeVendorId: vendor?.id,
+            page: 1,
+            limit: 8,
+          })
+        : { items: [] as Product[] }
+      if ((preferred.items?.length ?? 0) >= 4) return preferred
+      const fallback = await api.products.list({
         excludeVendorId: vendor?.id,
         page: 1,
         limit: 8,
-      }),
+      })
+      const seen = new Set((preferred.items ?? []).map((item) => item.id))
+      const merged = [...(preferred.items ?? [])]
+      for (const item of fallback.items ?? []) {
+        if (seen.has(item.id)) continue
+        merged.push(item)
+        seen.add(item.id)
+      }
+      return { items: merged }
+    },
     enabled: Boolean(vendor?.id),
     staleTime: 60_000,
   })
@@ -105,7 +123,7 @@ export default function VendorStoreScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-void" contentContainerClassName="pb-10">
+    <ScrollView className="flex-1 bg-void" nestedScrollEnabled contentContainerClassName="pb-10">
       {vendor.coverImage ? (
         <Image source={{ uri: vendor.coverImage }} className="w-full h-36 bg-navy" resizeMode="cover" />
       ) : null}
@@ -148,6 +166,8 @@ export default function VendorStoreScreen() {
                 className={`mt-4 py-3 rounded-2xl ${isInCart(focused.id) ? 'bg-navy' : 'bg-signal'}`}
                 onPress={handleAddFocused}
                 disabled={isInCart(focused.id)}
+                accessibilityRole="button"
+                accessibilityLabel={isInCart(focused.id) ? `${focused.name} already in bag` : `Add ${focused.name} to bag`}
               >
                 <Text className="text-white text-center font-bold">
                   {isInCart(focused.id) ? 'Already in bag' : 'Add to bag'}
@@ -193,21 +213,14 @@ export default function VendorStoreScreen() {
         )}
       </View>
 
-      <View className="px-2 mt-8">
-        <Text className="text-xl font-bold text-ice px-2 mb-1">You might also like</Text>
-        <Text className="text-mute px-2 mb-3">More from other MMall stores</Text>
-        {otherStoreItems.length ? (
-          <View className="flex-row flex-wrap">
-            {otherStoreItems.map((item) => (
-              <View key={item.id} className="w-1/2">
-                <ProductCard product={item} />
-              </View>
-            ))}
-          </View>
-        ) : (
-          <Text className="text-mute px-2">No extra picks right now.</Text>
-        )}
-      </View>
+      <ProductRail
+        title="You might also like"
+        subtitle="More from other MMall stores"
+        products={otherStoreItems}
+        onSeeAll={
+          likeCategory ? () => router.push(`/(customer)/browse?category=${likeCategory}`) : undefined
+        }
+      />
     </ScrollView>
   )
 }

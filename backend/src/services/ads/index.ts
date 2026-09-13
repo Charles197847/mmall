@@ -8,6 +8,8 @@ import { readPlatformSettings } from '../../shared/platform-settings.js'
 import { campaignStatusForDates, priceForSlot } from '../../shared/ads.js'
 import { enqueueJob } from '../../shared/queue/index.js'
 import { routeParam } from '../../shared/utils/http.js'
+import { assertKyc } from '../../shared/kyc.js'
+import { publishGrid } from '../../shared/events.js'
 
 const router = Router()
 const slotSchema = z.enum(['HOMEPAGE_BANNER', 'SEARCH_FEATURE', 'SHOP_HIGHLIGHT', 'PUSH_BLAST'])
@@ -165,12 +167,19 @@ router.post(
     if (!campaign) throw new HttpError(404, 'Campaign not found')
     if (campaign.status !== 'DRAFT') throw new HttpError(400, 'Campaign already purchased')
 
+    if (campaign.slot === 'PUSH_BLAST' || campaign.price >= 5000) {
+      await assertKyc(vendorId, 'ENTERPRISE')
+    } else {
+      await assertKyc(vendorId, 'ACTIVE_VENDOR')
+    }
+
     const status = campaignStatusForDates(campaign.startsAt, campaign.endsAt)
     const updated = await prisma.adCampaign.update({
       where: { id: campaign.id },
       data: { status },
     })
 
+    publishGrid({ type: 'ads', payload: { campaignId: campaign.id, status } })
     if (campaign.slot === 'PUSH_BLAST') {
       const delay = Math.max(0, campaign.startsAt.getTime() - Date.now())
       await enqueueJob('notification:broadcast', { campaignId: campaign.id }, { delay })

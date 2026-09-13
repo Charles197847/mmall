@@ -42,6 +42,12 @@ export default function VendorsPage() {
     onSuccess: invalidate,
   })
 
+  const kycMutation = useMutation({
+    mutationFn: ({ vendorId, status, rejectionReason }: { vendorId: string; status: 'APPROVED' | 'REJECTED'; rejectionReason?: string }) =>
+      api.kyc.review(vendorId, { status, rejectionReason }),
+    onSuccess: invalidate,
+  })
+
   if (isLoading) return <div className="text-slate-500">Loading vendors...</div>
 
   return (
@@ -71,6 +77,7 @@ export default function VendorsPage() {
               <th className="text-left p-3 text-sm font-medium text-gray-500">Store</th>
               <th className="text-left p-3 text-sm font-medium text-gray-500">Owner</th>
               <th className="text-left p-3 text-sm font-medium text-gray-500">Status</th>
+              <th className="text-left p-3 text-sm font-medium text-gray-500">KYC</th>
               <th className="text-left p-3 text-sm font-medium text-gray-500">Fees</th>
               <th className="text-left p-3 text-sm font-medium text-gray-500">Joined</th>
               <th className="text-left p-3 text-sm font-medium text-gray-500">Actions</th>
@@ -108,6 +115,35 @@ export default function VendorsPage() {
                     >
                       {status}
                     </span>
+                  </td>
+                  <td className="p-3 text-sm">
+                    <p className="font-medium">{vendor.kyc?.approvedTier?.replaceAll('_', ' ') ?? 'EXPLORER'}</p>
+                    <p className="text-xs text-gray-500">{vendor.kyc?.status ?? 'NOT_STARTED'}</p>
+                    {vendor.kyc?.status === 'PENDING' ? (
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          type="button"
+                          className="px-2 py-1 bg-green-600 text-white text-xs rounded"
+                          onClick={() => kycMutation.mutate({ vendorId: vendor.id, status: 'APPROVED' })}
+                        >
+                          Approve KYC
+                        </button>
+                        <button
+                          type="button"
+                          className="px-2 py-1 bg-red-600 text-white text-xs rounded"
+                          onClick={() => {
+                            const reason = window.prompt(
+                              'Rejection reason',
+                              'Document unreadable – please re-upload a clearer image of your SA ID',
+                            )
+                            if (!reason) return
+                            kycMutation.mutate({ vendorId: vendor.id, status: 'REJECTED', rejectionReason: reason })
+                          }}
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    ) : null}
                   </td>
                   <td className="p-3">
                     <a href="/settings" className="text-sm text-blue-600 hover:text-blue-800">

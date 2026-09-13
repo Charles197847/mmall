@@ -22,9 +22,10 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@shopping-mall/shared-types": "workspace:*",
     "@elastic/elasticsearch": "^8.17.0",
     "@prisma/client": "^6.5.0",
+    "@shopping-mall/shared-types": "workspace:*",
+    "@simplewebauthn/server": "^14.0.1",
     "bcryptjs": "^3.0.2",
     "bullmq": "^5.44.0",
     "cors": "^2.8.5",

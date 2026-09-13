@@ -11,9 +11,9 @@ export type AuthToken = {
   role: Role
 }
 
-export function signToken(payload: AuthToken) {
-  const expiresIn = (process.env.JWT_EXPIRES_IN ?? '7d') as jwt.SignOptions['expiresIn']
-  return jwt.sign(payload, JWT_SECRET, { expiresIn })
+export function signToken(payload: AuthToken, expiresIn?: jwt.SignOptions['expiresIn']) {
+  const ttl = expiresIn ?? ((process.env.JWT_EXPIRES_IN ?? '2h') as jwt.SignOptions['expiresIn'])
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: ttl })
 }
 
 export function optionalAuth(req: Request, _res: Response, next: NextFunction) {

@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { findSaPlace, saPlaces } from '@shopping-mall/shared-types'
 import { useVendor } from '../../../hooks/useVendor'
 import { api } from '../../../lib/api'
 
 interface StoreSettings {
   storeName: string
   description: string
+  city: string
   settings: {
     theme: {
       primaryColor: string
@@ -43,6 +45,7 @@ export default function StoreSettingsPage() {
     reset({
       storeName: vendor.storeName || '',
       description: vendor.description || '',
+      city: vendor.city || '',
       settings: {
         theme: {
           primaryColor: vendor.settings?.theme?.primaryColor ?? defaultTheme.primaryColor,
@@ -57,9 +60,15 @@ export default function StoreSettingsPage() {
     setSaving(true)
     setMessage('')
     try {
+      const place = findSaPlace(data.city)
       await api.vendors.update({
         storeName: data.storeName,
         description: data.description,
+        city: place?.city ?? data.city,
+        province: place?.province,
+        postalCode: place?.postalCode,
+        lat: place?.lat,
+        lng: place?.lng,
         settings: {
           theme: data.settings.theme,
           banner: vendor?.settings?.banner ?? null,
@@ -90,6 +99,19 @@ export default function StoreSettingsPage() {
             className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
           />
           {errors.storeName ? <p className="text-red-500 text-sm">{errors.storeName.message}</p> : null}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Fulfilment city</label>
+          <select {...register('city')} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+            <option value="">Select a South African city</option>
+            {saPlaces.map((place) => (
+              <option key={`${place.city}-${place.postalCode}`} value={place.city}>
+                {place.city} · {place.postalCode} · {place.province}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-slate-500">Shoppers nearby see this store first. The rest of the country still sees you.</p>
         </div>
 
         <div>

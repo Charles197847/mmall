@@ -12,6 +12,7 @@ export function useVendor() {
 
   return {
     vendor: query.data?.vendor ?? null,
+    kyc: query.data?.kyc ?? null,
     refetch: query.refetch,
     isLoading: query.isLoading,
   }

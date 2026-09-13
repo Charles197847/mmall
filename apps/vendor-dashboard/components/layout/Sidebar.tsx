@@ -12,6 +12,7 @@ const links = [
   { href: '/advertise', label: 'Advertise' },
   { href: '/store/settings', label: 'Store settings' },
   { href: '/fees', label: 'Pricing & fees' },
+  { href: '/verify', label: 'Verify account' },
 ]
 
 export function Sidebar({ storeName }: { storeName?: string }) {

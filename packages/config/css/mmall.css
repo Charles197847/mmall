@@ -53,6 +53,63 @@ body {
   backdrop-filter: blur(18px);
 }
 
+.mm-shop {
+  background: #070b18;
+}
+
+html.light .mm-shop {
+  background: #ffffff;
+}
+
+.mm-wordmark {
+  height: 2.5rem;
+  width: auto;
+}
+
+.mm-shop header .mm-wordmark {
+  height: 2.85rem;
+}
+
+html.dark .mm-wordmark {
+  filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(61, 232, 255, 0.35));
+}
+
+.mm-shop-footer {
+  background: #0c1224;
+  box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.28);
+}
+
+html.light .mm-shop-footer {
+  background: #ffffff;
+  box-shadow: 0 -12px 32px rgba(15, 23, 42, 0.08);
+}
+
+.mm-listing {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.mm-listing-photo,
+.mm-ad-photo {
+  background: #18233f;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+}
+
+html.light .mm-listing-photo,
+html.light .mm-ad-photo {
+  background: #c5ccd8;
+  box-shadow: 0 8px 18px rgba(20, 28, 48, 0.14);
+}
+
+.mm-ad-photo {
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.4);
+}
+
+html.light .mm-ad-photo {
+  box-shadow: 0 14px 28px rgba(20, 28, 48, 0.18);
+}
+
 .mm-input,
 input:not([type='checkbox']):not([type='radio']):not([type='file']),
 select,
@@ -111,4 +168,40 @@ textarea::placeholder {
 .bg-slate-900,
 .bg-slate-950 {
   background: rgb(var(--mm-navy)) !important;
+}
+
+.mm-hero-banner {
+  width: 100vw;
+  max-width: 100%;
+  margin-left: calc(50% - 50vw);
+  background: #050814;
+  overflow: hidden;
+  transition: background-color 0.45s ease;
+}
+
+.mm-hero-banner img {
+  display: block;
+  width: 100%;
+  height: 132px;
+  object-fit: cover;
+  object-position: center;
+  transition: filter 0.45s ease;
+}
+
+@media (max-width: 640px) {
+  .mm-hero-banner img {
+    height: 88px;
+  }
+}
+
+html.light .mm-hero-banner {
+  background: #0b1736;
+}
+
+html.dark img.auth-glyph {
+  filter: brightness(0) invert(1);
+}
+
+html.light img.auth-glyph {
+  filter: none;
 }
