@@ -66,7 +66,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const login = async (email: string, password: string) => {
     const response = await api.auth.login(email, password)
     if (!response.token) throw new Error(response.error || 'Login failed')
-    if (response.user.role === 'VENDOR') throw new Error('Use the vendor desk to sell. This app is for shoppers.')
+    if (response.user.role === 'VENDOR') throw new Error('That email is a merchant account. Use merchant sign-in.')
     try {
       const me = await api.auth.me(response.token)
       await persist(response.token, me)

@@ -4,6 +4,8 @@ import { Feather } from '@expo/vector-icons'
 import { useCartStore } from '../../stores/cartStore'
 import { headerOptions, palettes } from '../../lib/theme'
 import { useThemeStore } from '../../stores/themeStore'
+import { AdPopup } from '../../components/mall/AdPopup'
+import { LocationSync } from '../../components/mall/LocationSync'
 
 export default function CustomerLayout() {
   const cartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0))
@@ -11,25 +13,26 @@ export default function CustomerLayout() {
   const colors = palettes[mode]
 
   return (
-    <Tabs
+    <View className="flex-1">
+      <LocationSync />
+      <AdPopup />
+      <Tabs
       screenOptions={{
         headerShown: true,
         ...headerOptions(mode),
-        tabBarActiveTintColor: colors.glow,
+        tabBarActiveTintColor: colors.ice,
         tabBarInactiveTintColor: colors.mute,
         tabBarStyle: {
           backgroundColor: colors.navy,
-          borderTopWidth: 0,
+          borderTopWidth: 1,
+          borderTopColor: mode === 'light' ? '#E6E7EA' : '#1A2748',
           elevation: 0,
-          shadowColor: colors.glow,
-          shadowOpacity: 0.18,
-          shadowRadius: 16,
-          shadowOffset: { width: 0, height: -6 },
-          paddingBottom: 6,
-          paddingTop: 6,
-          height: 64,
+          shadowOpacity: 0,
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 62,
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '400' },
       }}
     >
       <Tabs.Screen
@@ -89,14 +92,16 @@ export default function CustomerLayout() {
           tabBarIcon: ({ color, size }) => <Feather name="user" size={size} color={color} />,
         }}
       />
-      <Tabs.Screen name="product/[id]" options={{ href: null, title: 'Product' }} />
-      <Tabs.Screen name="vendor/[slug]" options={{ href: null, title: 'Store' }} />
+      <Tabs.Screen name="product/[id]" options={{ href: null, headerShown: false, title: 'Product' }} />
+      <Tabs.Screen name="vendor/[slug]" options={{ href: null, headerShown: false, title: 'Store' }} />
       <Tabs.Screen name="saved/index" options={{ href: null, headerShown: false, title: 'Saved' }} />
       <Tabs.Screen name="help/index" options={{ href: null, headerShown: false, title: 'Customer service' }} />
       <Tabs.Screen name="specials/index" options={{ href: null, headerShown: false, title: "Today's specials" }} />
       <Tabs.Screen name="bestsellers/index" options={{ href: null, headerShown: false, title: 'Best sellers' }} />
       <Tabs.Screen name="vouchers/index" options={{ href: null, headerShown: false, title: 'Promotional vouchers' }} />
       <Tabs.Screen name="gift-cards/index" options={{ href: null, headerShown: false, title: 'Gift cards' }} />
+      <Tabs.Screen name="gift-cards/claim" options={{ href: null, headerShown: false, title: 'Claim gift card' }} />
     </Tabs>
+    </View>
   )
 }

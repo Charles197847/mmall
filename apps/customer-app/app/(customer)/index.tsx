@@ -3,78 +3,114 @@ import { useQuery } from '@tanstack/react-query'
 import { router } from 'expo-router'
 import { useAuth } from '../../lib/auth/AuthProvider'
 import { BrandMark } from '../../components/brand/BrandMark'
-import { DeliverTo } from '../../components/mall/DeliverTo'
+import { MallChrome } from '../../components/mall/MallChrome'
 import { MallDirectory } from '../../components/mall/MallDirectory'
-import { StoreWindow } from '../../components/mall/StoreWindow'
 import { HeroDrop } from '../../components/mall/HeroDrop'
-import { loadVendors } from '../../lib/catalog'
+import { CourtNav } from '../../components/mall/CourtNav'
+import { StoreRail } from '../../components/vendor/StoreRail'
+import { ProductRail } from '../../components/product/ProductRail'
+import { FilterBar } from '../../components/mall/FilterBar'
+import { AdBand } from '../../components/mall/AdBand'
+import { AdSlot } from '../../components/ads/AdSlot'
+import { MallFooter } from '../../components/mall/MallFooter'
+import { loadProducts, loadVendors, mockFeatured, mockProductsFor, mockVendors } from '../../lib/catalog'
+import { mallCategories } from '../../lib/mallCategories'
 import { mallSpecials } from '../../lib/mallOffers'
+import { applyShopFilter } from '../../lib/shopFilters'
+import { palettes } from '../../lib/theme'
+import { useThemeStore } from '../../stores/themeStore'
+import { useFilterStore } from '../../stores/filterStore'
+import { useAreaStore } from '../../stores/areaStore'
 
 export default function HomeScreen() {
   const { user } = useAuth()
+  const mode = useThemeStore((state) => state.mode)
+  const paper = palettes[mode].void
+  const filter = useFilterStore((state) => state.filter)
+  const setFilter = useFilterStore((state) => state.setFilter)
+  const area = useAreaStore((state) => state.place)
   const stores = useQuery({
     queryKey: ['vendors'],
     queryFn: () => loadVendors(),
     staleTime: 60_000,
   })
+  const live = useQuery({
+    queryKey: ['guest-featured'],
+    queryFn: () => loadProducts({ page: 1, limit: 24 }),
+    staleTime: 60_000,
+  })
 
   const drop = mallSpecials()[0]
-  const windows = (stores.data ?? []).slice(0, 3)
+  const shops = [...(stores.data?.length ? stores.data : mockVendors())].filter(
+    (shop, index, list) => list.findIndex((item) => item.slug === shop.slug) === index,
+  )
+  const featured = applyShopFilter(
+    [...(live.data?.items ?? []), ...mockFeatured()].slice(0, 18),
+    filter,
+    area,
+  )
+  const visibleCategories = filter.category
+    ? mallCategories.filter((item) => item.name === filter.category)
+    : mallCategories
+
+  function openBrowse(category?: string) {
+    if (category) setFilter({ category })
+    router.push(
+      category
+        ? (`/(customer)/browse?category=${encodeURIComponent(category)}` as never)
+        : ('/(customer)/browse' as never),
+    )
+  }
 
   return (
-    <ScrollView className="flex-1 bg-void" nestedScrollEnabled contentContainerClassName="pb-14">
-      <View>
-        <Image
-          source={require('../../assets/mmall-web-banner.png')}
-          className="w-full h-52 bg-navy"
-          resizeMode="cover"
-        />
-        <View className="absolute inset-0 bg-black/40" />
-        <View className="absolute top-12 left-4 right-4 flex-row items-center justify-between">
-          <BrandMark />
-          <Pressable
-            onPress={() => router.push(user ? '/(customer)/profile' : '/(auth)/login')}
-            className="px-3 py-1.5"
-          >
-            <Text className="text-ice text-sm">{user ? user.firstName : 'Sign in'}</Text>
-          </Pressable>
-        </View>
-        <View className="absolute bottom-4 left-4 right-4">
-          <Text className="text-[11px] tracking-[0.28em] text-glow uppercase">Open now</Text>
-          <Text className="text-ice text-3xl font-semibold mt-1">The mall is live</Text>
-          <View className="flex-row items-end justify-between mt-3">
-            <DeliverTo />
-            <Pressable onPress={() => router.push('/(customer)/browse')} className="border-b border-ice/40 pb-0.5">
-              <Text className="text-ice text-sm">Search</Text>
-            </Pressable>
+    <View className="flex-1" style={{ backgroundColor: paper }}>
+      <MallChrome />
+      <ScrollView nestedScrollEnabled contentContainerClassName="pb-8">
+        <View style={{ height: 180, overflow: 'hidden' }}>
+          <Image
+            source={require('../../assets/mmall-web-banner.png')}
+            className="absolute inset-0 w-full h-full"
+            resizeMode="cover"
+          />
+          <View className="absolute inset-0 bg-black/40" />
+          <View className="absolute left-5 right-5 bottom-6">
+            <BrandMark compact onDark />
+            <Text className="text-white mt-3" style={{ fontSize: 42, lineHeight: 44, fontWeight: '300' }}>
+              Open.
+            </Text>
+            <Text className="text-white/80 mt-1">
+              {user ? `Welcome back, ${user.firstName}.` : 'The digital shopping mall.'}
+            </Text>
           </View>
         </View>
-      </View>
 
-      <View className="mt-8">
+        <CourtNav />
         <MallDirectory />
-      </View>
-
-      {drop ? (
-        <View className="mt-10">
-          <HeroDrop product={drop} />
-        </View>
-      ) : null}
-
-      <View className="mt-12">
-        <View className="px-4 mb-4 flex-row items-end justify-between">
-          <View>
-            <Text className="text-[11px] tracking-[0.28em] text-mute uppercase">Storefronts</Text>
-            <Text className="text-2xl font-semibold text-ice mt-1">Open tonight</Text>
+        {drop ? (
+          <View className="mt-4">
+            <HeroDrop product={drop} />
           </View>
-          <Pressable onPress={() => router.push('/(customer)/stores')}>
-            <Text className="text-glow text-sm">All shops</Text>
-          </Pressable>
-        </View>
-        {windows.map((vendor) => (
-          <StoreWindow key={vendor.id} vendor={vendor} />
+        ) : null}
+
+        <AdSlot slot="HOMEPAGE_BANNER" />
+
+        <StoreRail vendors={shops} loading={stores.isLoading} onSeeAll={() => router.push('/(customer)/stores')} />
+        <FilterBar />
+        <ProductRail title="Featured" products={featured} onSeeAll={() => openBrowse()} />
+
+        {visibleCategories.map((category, index) => (
+          <View key={category.name}>
+            <ProductRail
+              title={category.name}
+              products={applyShopFilter(mockProductsFor(category.name, 14), filter, area)}
+              onSeeAll={() => openBrowse(category.name)}
+            />
+            {(index + 1) % 2 === 0 ? <AdBand label={`${category.name} promo`} /> : null}
+          </View>
         ))}
-      </View>
-    </ScrollView>
+
+        <MallFooter />
+      </ScrollView>
+    </View>
   )
 }

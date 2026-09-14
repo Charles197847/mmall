@@ -4,7 +4,7 @@ import type { Vendor } from '@shopping-mall/shared-types'
 
 export function VendorCard({ vendor }: { vendor: Vendor }) {
   return (
-    <Link href={`/(vendor)/store/${vendor.slug}`} asChild>
+    <Link href={`/(customer)/vendor/${vendor.slug}`} asChild>
       <Pressable className="bg-panel rounded-2xl p-4 mr-3 w-48">
         <View className="h-16 w-16 rounded-2xl bg-brand/20 items-center justify-center mb-3">
           <Text className="text-glow font-bold">{vendor.storeName.slice(0, 1)}</Text>

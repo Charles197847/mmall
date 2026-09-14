@@ -7,6 +7,7 @@ import { AuthProvider } from '../lib/auth/AuthProvider'
 import { headerOptions } from '../lib/theme'
 import { useThemeStore } from '../stores/themeStore'
 import { ThemeSync } from '../components/theme/ThemeSync'
+import { ThemeRoot } from '../components/theme/ThemeRoot'
 import { LiveGridSync } from '../components/live/LiveGridSync'
 
 const queryClient = new QueryClient()
@@ -21,12 +22,14 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <LiveGridSync />
-          <Stack screenOptions={headerOptions(mode)}>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(customer)" options={{ headerShown: false }} />
-            <Stack.Screen name="(vendor)" options={{ headerShown: false }} />
-          </Stack>
+          <ThemeRoot>
+            <Stack screenOptions={headerOptions(mode)}>
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="(customer)" options={{ headerShown: false }} />
+              <Stack.Screen name="(vendor)" options={{ headerShown: false }} />
+            </Stack>
+          </ThemeRoot>
         </AuthProvider>
       </QueryClientProvider>
     </SafeAreaProvider>

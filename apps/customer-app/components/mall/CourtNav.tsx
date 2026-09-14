@@ -1,37 +1,38 @@
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, Text, Pressable, View } from 'react-native'
 import { router, usePathname } from 'expo-router'
 
-const courtLinks = [
+export const courtLinks = [
   { href: '/(customer)', label: 'Home', icon: '⌂', match: 'home' },
-  { href: '/(customer)/gift-cards', label: 'Gift cards', icon: '🎁', match: 'gift' },
+  { href: '/(customer)/gift-cards', label: 'Gift cards', icon: '🎁', match: 'gift-cards' },
   { href: '/(customer)/specials', label: "Today's specials", icon: '⚡', match: 'specials' },
-  { href: '/(customer)/bestsellers', label: 'Best sellers', icon: '★', match: 'best' },
-  { href: '/(customer)/vouchers', label: 'Promotional vouchers', icon: '🎟', match: 'voucher' },
+  { href: '/(customer)/bestsellers', label: 'Best sellers', icon: '★', match: 'bestsellers' },
+  { href: '/(customer)/vouchers', label: 'Promotional vouchers', icon: '🎟', match: 'vouchers' },
   { href: '/(customer)/help', label: 'Customer service', icon: '☎', match: 'help' },
+  { href: '/(auth)/sell', label: 'Sell', icon: '🏪', match: 'sell' },
 ] as const
 
 export function CourtNav() {
-  const path = usePathname()
+  const path = usePathname() ?? ''
 
   return (
-    <View className="mb-8" accessibilityLabel="Mall pages">
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="px-4 gap-1.5">
+    <View className="mb-6" accessibilityLabel="Mall pages">
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 6 }}>
         {courtLinks.map((item) => {
           const active =
             item.match === 'home'
-              ? path === '/' || path.endsWith('/(customer)') || path === '/(customer)'
+              ? path === '/' || path === '/(customer)' || path.endsWith('/(customer)') || path.endsWith('/(customer)/')
               : path.includes(item.match)
           return (
-            <TouchableOpacity
+            <Pressable
               key={item.href}
               onPress={() => router.push(item.href as never)}
               className={`flex-row items-center rounded-full border px-2.5 py-1.5 ${
-                active ? 'bg-brand border-glow' : 'bg-panel border-panel'
+                active ? 'bg-brand border-brand' : 'bg-panel border-ice/10'
               }`}
             >
               <Text className="mr-1">{item.icon}</Text>
               <Text className={`text-xs ${active ? 'text-white' : 'text-ice'}`}>{item.label}</Text>
-            </TouchableOpacity>
+            </Pressable>
           )
         })}
       </ScrollView>

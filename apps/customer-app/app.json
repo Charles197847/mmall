@@ -21,7 +21,8 @@
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         },
-        "NSFaceIDUsageDescription": "MMall uses Face ID to confirm a passkey sign-in."
+        "NSFaceIDUsageDescription": "MMall uses Face ID to confirm a passkey sign-in.",
+        "NSLocationWhenInUseUsageDescription": "MMall uses your location to show nearby shops first."
       },
       "associatedDomains": [
         "applinks:mmall.local"
@@ -36,7 +37,9 @@
       "permissions": [
         "INTERNET",
         "USE_BIOMETRIC",
-        "USE_FINGERPRINT"
+        "USE_FINGERPRINT",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
       ],
       "intentFilters": [
         {
@@ -61,6 +64,12 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "MMall uses your location to show nearby shops first."
+        }
+      ],
       [
         "expo-build-properties",
         {

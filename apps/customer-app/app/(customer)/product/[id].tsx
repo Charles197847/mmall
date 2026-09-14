@@ -9,6 +9,8 @@ import { LoveButton } from '../../../components/product/LoveButton'
 import { ProductRail } from '../../../components/product/ProductRail'
 import { formatMoney } from '../../../lib/utils/format'
 import { productImage } from '../../../lib/utils/images'
+import { ShopPromises } from '../../../components/mall/ShopPromises'
+import { MallChrome } from '../../../components/mall/MallChrome'
 import { palettes } from '../../../lib/theme'
 import { useThemeStore } from '../../../stores/themeStore'
 
@@ -22,9 +24,10 @@ export default function ProductDetailScreen() {
   const mode = useThemeStore((state) => state.mode)
   const colors = palettes[mode]
   const addItem = useCartStore((state) => state.addItem)
-  const inCart = useCartStore((state) => state.isInCart(id ?? ''))
+  const inCart = useCartStore((state) => state.isInCart)
   const [photo, setPhoto] = useState(0)
   const [picks, setPicks] = useState<Record<string, string>>({})
+  const [quantity, setQuantity] = useState(1)
 
   const productQuery = useQuery({
     queryKey: ['product', id],
@@ -67,7 +70,15 @@ export default function ProductDetailScreen() {
     )
   }
 
-  const addToBag = () => {
+  const addToBag = (buyNow = false) => {
+    const options = item.options ?? []
+    const selected = Object.fromEntries(
+      options.map((option) => [option.name, picks[option.name] ?? '']),
+    )
+    if (options.some((option) => !selected[option.name])) {
+      Alert.alert('Options', 'Choose the available options first.')
+      return
+    }
     addItem({
       productId: item.id,
       name: item.name,
@@ -75,14 +86,32 @@ export default function ProductDetailScreen() {
       image: productImage(item.images?.[0]),
       vendorId: item.vendorId,
       vendorName: item.vendor?.storeName ?? 'MMall',
-      maxQuantity: item.inventory || 99,
-      quantity: 1,
+      maxQuantity: Math.min(8, item.inventory || 99),
+      quantity,
+      options: options.length ? selected : undefined,
     })
+    if (buyNow) {
+      router.push('/(customer)/cart/checkout')
+      return
+    }
     Alert.alert('Added to bag', `${item.name} is in your cart.`)
   }
 
+  const already = inCart(item.id, picks)
+
   return (
     <ScrollView className="flex-1 bg-void" contentContainerClassName="pb-12">
+      <MallChrome />
+      <View className="px-4 py-3">
+        <Pressable onPress={() => router.push('/(customer)')}>
+          <Text className="text-mute text-sm">Mall</Text>
+        </Pressable>
+        {item.category ? (
+          <Pressable onPress={() => router.push(`/(customer)/browse?category=${item.category}`)}>
+            <Text className="text-mute text-sm"> / {item.category}</Text>
+          </Pressable>
+        ) : null}
+      </View>
       <View>
         <Image
           source={{ uri: productImage(item.images?.[photo] ?? item.images?.[0]) }}
@@ -129,6 +158,9 @@ export default function ProductDetailScreen() {
             <Text className="text-sm text-mute line-through">{formatMoney(item.comparePrice)}</Text>
           ) : null}
         </View>
+        <View className="mt-4">
+          <ShopPromises />
+        </View>
         <Text className="text-mute mt-6 leading-6">{item.description}</Text>
         {item.styleNotes ? <Text className="text-mute mt-3">{item.styleNotes}</Text> : null}
         {item.fromShop ? <Text className="text-mute mt-2">{item.fromShop}</Text> : null}
@@ -138,7 +170,7 @@ export default function ProductDetailScreen() {
             <Text className="text-ice font-semibold mb-2">{option.name}</Text>
             <View className="flex-row flex-wrap">
               {option.values.map((value) => {
-                const active = (picks[option.name] ?? option.values[0]) === value
+                const active = picks[option.name] === value
                 return (
                   <Pressable
                     key={value}
@@ -165,13 +197,40 @@ export default function ProductDetailScreen() {
           </View>
         ) : null}
 
+        <View className="mt-6 flex-row items-center justify-between">
+          <Text className="text-ice font-semibold">Quantity</Text>
+          <View className="flex-row items-center">
+            <Pressable
+              className="w-9 h-9 rounded-full bg-panel items-center justify-center"
+              onPress={() => setQuantity((value) => Math.max(1, value - 1))}
+            >
+              <Text className="text-ice text-lg">−</Text>
+            </Pressable>
+            <Text className="w-10 text-center text-ice">{quantity}</Text>
+            <Pressable
+              className="w-9 h-9 rounded-full bg-panel items-center justify-center"
+              onPress={() => setQuantity((value) => Math.min(8, value + 1))}
+            >
+              <Text className="text-ice text-lg">+</Text>
+            </Pressable>
+          </View>
+        </View>
+
         <Pressable
-          className={`mt-6 py-4 rounded-2xl ${inCart ? 'bg-navy' : 'bg-signal'}`}
-          onPress={addToBag}
+          className={`mt-6 py-4 rounded-2xl ${already ? 'bg-navy' : 'bg-signal'}`}
+          onPress={() => addToBag(false)}
           accessibilityRole="button"
-          accessibilityLabel={inCart ? `${item.name} already in bag` : `Add ${item.name} to bag`}
+          accessibilityLabel={already ? `Add another ${item.name}` : `Add ${item.name} to bag`}
         >
-          <Text className="text-white text-center font-bold text-lg">{inCart ? 'Add another' : 'Add to bag'}</Text>
+          <Text className="text-white text-center font-bold text-lg">{already ? 'Add another' : 'Add to bag'}</Text>
+        </Pressable>
+        <Pressable
+          className="mt-3 py-4 rounded-2xl border border-ice/15"
+          onPress={() => addToBag(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`Buy ${item.name} now`}
+        >
+          <Text className="text-ice text-center font-bold text-lg">Buy now</Text>
         </Pressable>
       </View>
 

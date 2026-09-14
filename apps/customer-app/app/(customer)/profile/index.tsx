@@ -8,6 +8,7 @@ import { ThemeToggle } from '../../../components/theme/ThemeToggle'
 import { useThemeStore } from '../../../stores/themeStore'
 import { api } from '../../../lib/api'
 import { passkeysAvailable } from '../../../lib/passkeys'
+import { CourtNav } from '../../../components/mall/CourtNav'
 import { mmall } from '../../../lib/theme'
 
 export default function ProfileScreen() {
@@ -61,7 +62,10 @@ export default function ProfileScreen() {
         <BrandMark compact />
         <ThemeToggle />
       </View>
-      <Text className="text-2xl font-bold mb-1 mt-6 text-ice">Profile</Text>
+      <View className="mt-6 -mx-6">
+        <CourtNav />
+      </View>
+      <Text className="text-2xl font-bold mb-1 text-ice">Profile</Text>
       <Text className="text-mute mb-4">{mode === 'dark' ? 'Dark grid' : 'Light grid'} appearance</Text>
       {user ? (
         <View className="bg-panel rounded-2xl p-4">
@@ -113,7 +117,7 @@ export default function ProfileScreen() {
           <Link href="/(auth)/login" className="text-glow font-semibold mb-3">
             Sign in
           </Link>
-          <Link href="/(auth)/register" className="text-glow font-semibold">
+          <Link href="/(auth)/join" className="text-glow font-semibold">
             Create an account
           </Link>
         </View>

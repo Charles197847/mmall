@@ -1,7 +1,7 @@
 export const mallCourts = [
   {
     id: 'fashion',
-    name: 'Fashion court',
+    name: 'Fashion',
     level: 'Level 1',
     line: 'Apparel, shoes, jewelry',
     categories: ['Fashion', 'Footwear', 'Jewelry', 'Sportswear'],
@@ -9,7 +9,7 @@ export const mallCourts = [
   },
   {
     id: 'tech',
-    name: 'Tech court',
+    name: 'Tech',
     level: 'Level 2',
     line: 'Phones, audio, machines',
     categories: ['Electronics'],
@@ -17,7 +17,7 @@ export const mallCourts = [
   },
   {
     id: 'living',
-    name: 'Home court',
+    name: 'Home',
     level: 'Level 2',
     line: 'Rooms, outdoor, gifts',
     categories: ['Home', 'Outdoor', 'Gifts'],
@@ -25,7 +25,7 @@ export const mallCourts = [
   },
   {
     id: 'beauty',
-    name: 'Beauty court',
+    name: 'Beauty',
     level: 'Level 1',
     line: 'Skin, salon, wellness',
     categories: ['Beauty', 'Salons', 'Health'],
@@ -41,11 +41,19 @@ export const mallCourts = [
   },
   {
     id: 'leisure',
-    name: 'Leisure wing',
+    name: 'Leisure',
     level: 'Level 3',
     line: 'Screens, play, books',
     categories: ['Cinemas', 'Family Entertainment', 'Books', 'Automotive'],
     cover: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=80',
+  },
+  {
+    id: 'services',
+    name: 'Services',
+    level: 'Ground',
+    line: 'Cards, forex, advice',
+    categories: ['Financial Services'],
+    cover: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&q=80',
   },
 ] as const
 

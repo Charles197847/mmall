@@ -4,6 +4,18 @@
 
 /* Local fallback so Expo web has theme vars even if the workspace import is skipped. */
 :root,
+html.light {
+  --mm-void: 241 242 244;
+  --mm-navy: 255 255 255;
+  --mm-panel: 255 255 255;
+  --mm-glass: 232 234 238;
+  --mm-ice: 11 23 54;
+  --mm-mute: 92 100 114;
+  --mm-brand: 47 107 255;
+  --mm-signal: 225 29 72;
+  --mm-glow: 21 87 224;
+}
+
 html.dark {
   --mm-void: 5 8 20;
   --mm-navy: 11 23 54;
@@ -14,18 +26,6 @@ html.dark {
   --mm-brand: 47 107 255;
   --mm-signal: 255 45 74;
   --mm-glow: 61 232 255;
-}
-
-html.light {
-  --mm-void: 243 246 255;
-  --mm-navy: 255 255 255;
-  --mm-panel: 255 255 255;
-  --mm-glass: 238 242 255;
-  --mm-ice: 11 23 54;
-  --mm-mute: 90 107 140;
-  --mm-brand: 47 107 255;
-  --mm-signal: 225 29 72;
-  --mm-glow: 21 87 224;
 }
 
 html,

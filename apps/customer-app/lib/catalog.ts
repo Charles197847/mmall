@@ -1,7 +1,7 @@
 import type { Paginated, Product, Vendor } from '@shopping-mall/shared-types'
 import { findSaPlace, saPlaces } from '@shopping-mall/shared-types'
 import { api } from './api'
-import { mallCategories } from './mallCategories'
+import { mallCategories, subcategoriesFor } from './mallCategories'
 import { withSellerDetail } from './productDetail'
 
 const photos = [
@@ -91,8 +91,10 @@ function vendorFor(index: number) {
 
 export function mockProductsFor(category: string, count = 8): Product[] {
   const names = samples[category] ?? Array.from({ length: count }, (_, i) => `${category} pick ${i + 1}`)
+  const subs = subcategoriesFor(category)
   return names.slice(0, count).map((name, index) => {
     const vendor = vendorFor(index + category.length)
+    const subcategory = subs[index % (subs.length || 1)] ?? category
     return withSellerDetail({
       id: `mock-${slugify(category)}-${index}`,
       vendorId: vendor.id,
@@ -104,7 +106,7 @@ export function mockProductsFor(category: string, count = 8): Product[] {
       inventory: 24,
       images: [photos[(index + category.length) % photos.length]],
       category,
-      tags: [category],
+      tags: [category, subcategory],
       isActive: true,
       vendor,
     })
@@ -152,10 +154,12 @@ export function findMockVendor(slug: string) {
 
 export function mockProductsForVendor(vendor: Pick<Vendor, 'id' | 'storeName' | 'slug' | 'logo'>) {
   return mallCategories
-    .flatMap((item) => mockProductsFor(item.name, 8))
-    .filter((item) => item.vendorId === vendor.id)
+    .flatMap((item) => mockProductsFor(item.name, 4))
+    .slice(0, 12)
     .map((item) => ({
       ...item,
+      id: `${vendor.id}-${item.id}`,
+      vendorId: vendor.id,
       vendor: {
         id: vendor.id,
         storeName: vendor.storeName,
@@ -167,9 +171,26 @@ export function mockProductsForVendor(vendor: Pick<Vendor, 'id' | 'storeName' | 
 
 export function findMockProduct(id: string) {
   if (!id.startsWith('mock-')) return null
+  const nested = id.match(/-(mock-[a-z0-9-]+)$/)
+  const lookup = nested?.[1] ?? id
   for (const category of mallCategories) {
-    const match = mockProductsFor(category.name, 12).find((item) => item.id === id)
-    if (match) return match
+    const match = mockProductsFor(category.name, 12).find((item) => item.id === lookup || item.id === id)
+    if (match) {
+      if (lookup === id) return match
+      const vendor = mockVendors().find((shop) => id.startsWith(`${shop.id}-`))
+      if (!vendor) return match
+      return {
+        ...match,
+        id,
+        vendorId: vendor.id,
+        vendor: {
+          id: vendor.id,
+          storeName: vendor.storeName,
+          slug: vendor.slug,
+          logo: vendor.logo,
+        },
+      }
+    }
   }
   return null
 }
@@ -188,8 +209,7 @@ function mockProductPage(params?: {
     : mallCategories.flatMap((item) => mockProductsFor(item.name, 4))
 
   if (params?.q) {
-    const q = params.q.toLowerCase()
-    items = items.filter((item) => item.name.toLowerCase().includes(q) || item.category?.toLowerCase().includes(q))
+    items = items.filter((item) => productMatchesQuery(item, params.q!))
   }
   if (params?.vendorId) items = items.filter((item) => item.vendorId === params.vendorId)
   if (params?.excludeVendorId) items = items.filter((item) => item.vendorId !== params.excludeVendorId)
@@ -198,6 +218,17 @@ function mockProductPage(params?: {
   const limit = params?.limit ?? items.length
   const start = (page - 1) * limit
   return { items: items.slice(start, start + limit), total: items.length, page, limit }
+}
+
+export function productMatchesQuery(item: Product, query: string) {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  return (
+    item.name.toLowerCase().includes(q) ||
+    (item.category?.toLowerCase().includes(q) ?? false) ||
+    (item.vendor?.storeName.toLowerCase().includes(q) ?? false) ||
+    (item.description?.toLowerCase().includes(q) ?? false)
+  )
 }
 
 export async function loadProducts(params?: {
@@ -211,7 +242,9 @@ export async function loadProducts(params?: {
   try {
     const data = await api.products.list(params)
     if (data.items?.length) {
-      return { ...data, items: data.items.map((item) => withSellerDetail(item)) }
+      let items = data.items.map((item) => withSellerDetail(item))
+      if (params?.q) items = items.filter((item) => productMatchesQuery(item, params.q!))
+      if (items.length) return { ...data, items, total: items.length }
     }
   } catch {
     /* phone builds often cannot reach localhost — show the mall grid anyway */
@@ -237,6 +270,31 @@ export async function loadVendors() {
     /* use court stores */
   }
   return mockVendors()
+}
+
+export function mockAds(label: string, count = 8) {
+  const campaigns = [
+    { title: 'Weekend drop', headline: 'Featured vendor campaign', store: 'Velvet Lane' },
+    { title: 'Outdoor week', headline: 'Gear up before Friday', store: 'Northline Supply' },
+    { title: 'Home edit', headline: 'New season interiors', store: 'Harbor Home' },
+    { title: 'Tech hour', headline: 'Devices on the grid', store: 'Acme Electronics' },
+    { title: 'Beauty night', headline: 'Salon and skincare', store: 'Lumen Beauty' },
+    { title: 'Kitchen edit', headline: 'Cookware on offer', store: 'Cape Kitchen' },
+    { title: 'Sport rush', headline: 'Training kit sale', store: 'Atlas Sport' },
+    { title: 'Plaza reads', headline: 'New hardcovers', store: 'Plaza Books' },
+  ]
+  return Array.from({ length: count }, (_, index) => {
+    const campaign = campaigns[index % campaigns.length]
+    return {
+      id: `mock-ad-${slugify(label)}-${index + 1}`,
+      slot: 'HOMEPAGE_BANNER' as const,
+      title: `${label} · ${campaign.title}`,
+      headline: campaign.headline,
+      imageUrl: photos[(index + label.length) % photos.length],
+      vendorName: campaign.store,
+      vendorSlug: slugify(campaign.store),
+    }
+  })
 }
 
 export async function loadVendor(slug: string) {

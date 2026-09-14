@@ -1,52 +1,78 @@
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native'
+import { useState } from 'react'
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native'
+import { router } from 'expo-router'
 import { formatMoney } from '../../../lib/utils/format'
-
-const tones: Record<string, string> = {
-  rose: 'bg-[#e11d48]',
-  teal: 'bg-[#0f766e]',
-  amber: 'bg-[#d97706]',
-  violet: 'bg-[#7c3aed]',
-  navy: 'bg-[#1e40af]',
-}
-
-const shopVouchers = [
-  { code: 'VELVET10', shop: 'Velvet Lane', detail: 'Apparel court this week', percent: 10, minSpend: 250, tone: 'rose' },
-  { code: 'NORTH50', shop: 'Northline Supply', detail: 'Outdoor and tools', amount: 50, minSpend: 400, tone: 'teal' },
-  { code: 'HARBOR15', shop: 'Harbor Home', detail: 'Home court weekend', percent: 15, minSpend: 500, tone: 'amber' },
-  { code: 'LUMEN30', shop: 'Lumen Beauty', detail: 'Skincare and salon', amount: 30, minSpend: 150, tone: 'violet' },
-  { code: 'ATLAS12', shop: 'Atlas Sport', detail: 'Training kit', percent: 12, minSpend: 300, tone: 'navy' },
-]
+import { CourtNav } from '../../../components/mall/CourtNav'
+import { MallChrome } from '../../../components/mall/MallChrome'
+import { MallCardFace } from '../../../components/shop/MallCardFace'
+import { shopVouchers, useWalletStore } from '../../../stores/walletStore'
 
 export default function VouchersScreen() {
+  const saved = useWalletStore((state) => state.vouchers)
+  const saveVoucher = useWalletStore((state) => state.saveVoucher)
+  const [selected, setSelected] = useState<(typeof shopVouchers)[number] | null>(null)
+
   return (
-    <ScrollView className="flex-1 bg-void" contentContainerClassName="pb-10">
-      <View className="pt-14 px-4">
-        <Text className="text-[11px] tracking-[0.28em] text-mute uppercase">Offers</Text>
-        <Text className="text-3xl font-semibold text-ice mt-1">Vouchers</Text>
-      </View>
-      <Text className="px-4 mt-2 text-mute">Tap a card to save the code, then apply it at checkout.</Text>
-      <View className="px-4 mt-6">
-        {shopVouchers.map((voucher) => (
-          <Pressable
-            key={voucher.code}
-            className={`rounded-2xl p-5 mb-4 overflow-hidden ${tones[voucher.tone]}`}
-            onPress={() => Alert.alert('Voucher saved', `${voucher.code} is ready at checkout.`)}
-          >
-            <Text className="text-white/70 text-xs tracking-[0.2em] uppercase">Promotional voucher</Text>
-            <Text className="text-white text-2xl font-semibold mt-2">{voucher.shop}</Text>
-            <Text className="text-white/80 mt-1">
-              {voucher.detail} · Min {formatMoney(voucher.minSpend)}
-            </Text>
-            <View className="my-4 border-t border-dashed border-white/40" />
-            <View className="flex-row justify-between items-center">
-              <Text className="text-white font-mono text-lg tracking-wider">{voucher.code}</Text>
-              <Text className="text-white font-bold">
-                {voucher.percent ? `${voucher.percent}% OFF` : `${formatMoney(voucher.amount ?? 0)} OFF`}
-              </Text>
-            </View>
-          </Pressable>
-        ))}
-      </View>
-    </ScrollView>
+    <View className="flex-1 bg-void">
+      <MallChrome />
+      <ScrollView contentContainerClassName="pb-12">
+        <CourtNav />
+        <View className="px-5">
+          <Text className="text-mute text-sm">Offers</Text>
+          <Text className="text-ice mt-1" style={{ fontSize: 34, fontWeight: '300' }}>
+            Promotional vouchers
+          </Text>
+          <Text className="text-mute mt-2">Tap a card to render it. Save it, then apply the code at checkout.</Text>
+        </View>
+        <View className="px-5 mt-6">
+          {shopVouchers.map((voucher) => (
+            <Pressable key={voucher.code} className="mb-4" onPress={() => setSelected(voucher)}>
+              <MallCardFace
+                tone={voucher.tone}
+                eyebrow="Promotional voucher"
+                title={voucher.shop}
+                detail={`${voucher.detail} · Min ${formatMoney(voucher.minSpend)}`}
+                badge={voucher.percent ? `${voucher.percent}% OFF` : `${formatMoney(voucher.amount ?? 0)} OFF`}
+                code={voucher.code}
+              />
+            </Pressable>
+          ))}
+        </View>
+      </ScrollView>
+
+      <Modal visible={Boolean(selected)} transparent animationType="fade" onRequestClose={() => setSelected(null)}>
+        <Pressable className="flex-1 bg-black/50 justify-center px-6" onPress={() => setSelected(null)}>
+          {selected ? (
+            <Pressable onPress={() => undefined}>
+              <MallCardFace
+                large
+                tone={selected.tone}
+                eyebrow="Promotional voucher"
+                title={selected.shop}
+                detail={`${selected.detail} · Min spend ${formatMoney(selected.minSpend)}`}
+                badge={selected.percent ? `${selected.percent}% OFF` : `${formatMoney(selected.amount ?? 0)} OFF`}
+                code={selected.code}
+              />
+              <View className="flex-row justify-end mt-5">
+                <Pressable className="px-4 py-2" onPress={() => router.push(`/(customer)/vendor/${selected.slug}`)}>
+                  <Text className="text-glow font-semibold">Visit shop</Text>
+                </Pressable>
+                <Pressable
+                  className="rounded-full bg-brand px-5 py-2.5"
+                  onPress={() => {
+                    saveVoucher(selected.code)
+                    setSelected(null)
+                  }}
+                >
+                  <Text className="text-white font-semibold">
+                    {saved.includes(selected.code) ? 'Saved' : 'Save this card'}
+                  </Text>
+                </Pressable>
+              </View>
+            </Pressable>
+          ) : null}
+        </Pressable>
+      </Modal>
+    </View>
   )
 }

@@ -12,12 +12,12 @@ type ThemeStore = {
 export const useThemeStore = create<ThemeStore>()(
   persist(
     (set, get) => ({
-      mode: 'dark',
+      mode: 'light',
       setMode: (mode) => set({ mode }),
       toggle: () => set({ mode: get().mode === 'dark' ? 'light' : 'dark' }),
     }),
     {
-      name: 'mmall-theme',
+      name: 'mmall-theme-v2',
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),

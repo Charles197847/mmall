@@ -11,6 +11,7 @@ export default function CartScreen() {
   const getItemsByVendor = useCartStore((s) => s.getItemsByVendor)
   const updateQuantity = useCartStore((s) => s.updateQuantity)
   const removeItem = useCartStore((s) => s.removeItem)
+  const clearCart = useCartStore((s) => s.clearCart)
 
   const vendorGroups = Array.from(getItemsByVendor().entries())
 
@@ -39,7 +40,7 @@ export default function CartScreen() {
           <View className="bg-panel rounded-2xl p-4 mb-4">
             <Text className="font-bold text-lg mb-3 text-ice">{vendorItems[0].vendorName}</Text>
             {vendorItems.map((item) => (
-              <View key={item.productId} className="flex-row mb-3 pb-3">
+              <View key={item.lineKey} className="flex-row mb-3 pb-3">
                 <Image
                   source={{ uri: productImage(item.image) }}
                   className="w-20 h-20 rounded-xl bg-navy"
@@ -49,22 +50,29 @@ export default function CartScreen() {
                   <Text className="font-semibold text-ice" numberOfLines={2}>
                     {item.name}
                   </Text>
+                  {item.options && Object.keys(item.options).length ? (
+                    <Text className="text-xs text-mute mt-0.5">
+                      {Object.entries(item.options)
+                        .map(([key, value]) => `${key} ${value}`)
+                        .join(' · ')}
+                    </Text>
+                  ) : null}
                   <Text className="text-glow font-bold mt-1">R{item.price.toFixed(2)}</Text>
                   <View className="flex-row items-center mt-2">
                     <TouchableOpacity
                       className="w-7 h-7 border border-glow/30 rounded-lg items-center justify-center"
-                      onPress={() => updateQuantity(item.productId, item.quantity - 1)}
+                      onPress={() => updateQuantity(item.lineKey, item.quantity - 1)}
                     >
                       <Text className="text-lg text-ice">−</Text>
                     </TouchableOpacity>
                     <Text className="w-8 text-center text-ice">{item.quantity}</Text>
                     <TouchableOpacity
                       className="w-7 h-7 border border-glow/30 rounded-lg items-center justify-center"
-                      onPress={() => updateQuantity(item.productId, item.quantity + 1)}
+                      onPress={() => updateQuantity(item.lineKey, item.quantity + 1)}
                     >
                       <Text className="text-lg text-ice">+</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity className="ml-auto" onPress={() => removeItem(item.productId)}>
+                    <TouchableOpacity className="ml-auto" onPress={() => removeItem(item.lineKey)}>
                       <Feather name="trash-2" size={20} color={mmall.signal} />
                     </TouchableOpacity>
                   </View>
@@ -91,6 +99,9 @@ export default function CartScreen() {
           onPress={() => router.push('/(customer)/cart/checkout')}
         >
           <Text className="text-white text-center font-bold text-lg">Proceed to checkout</Text>
+        </TouchableOpacity>
+        <TouchableOpacity className="mt-3" onPress={clearCart}>
+          <Text className="text-mute text-center">Clear basket</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -1,24 +1,32 @@
-import { Image, Pressable, Text, View } from 'react-native'
+import { Image, Text, View } from 'react-native'
 import { router } from 'expo-router'
 import type { Product } from '@shopping-mall/shared-types'
 import { formatMoney } from '../../lib/utils/format'
 import { productImage } from '../../lib/utils/images'
+import { PressScale } from '../ui/PressScale'
+import { SectionHead } from './SectionHead'
 
-export function HeroDrop({ product }: { product: Product }) {
+export function HeroDrop({ product, showHeading = true }: { product: Product; showHeading?: boolean }) {
   return (
-    <Pressable className="px-4" onPress={() => router.push(`/(customer)/product/${product.id}`)}>
-      <Text className="text-[11px] tracking-[0.28em] text-mute uppercase">In the window</Text>
-      <Text className="text-2xl font-semibold text-ice mt-1 mb-4">Today on the floor</Text>
-      <View className="overflow-hidden rounded-2xl">
-        <Image source={{ uri: productImage(product.images?.[0]) }} className="w-full h-80 bg-navy" />
-        <View className="absolute bottom-0 left-0 right-0 px-4 py-4 bg-black/45">
-          <Text className="text-ice text-xl font-semibold" numberOfLines={2}>
+    <View>
+      {showHeading ? <SectionHead kicker="On the floor" title="One object" /> : null}
+      <View className="px-5">
+        <PressScale
+          onPress={() => router.push(`/(customer)/product/${product.id}`)}
+          accessibilityRole="button"
+          accessibilityLabel={`${product.name}, ${formatMoney(product.price)}`}
+        >
+          <View className="overflow-hidden bg-navy" style={{ borderRadius: 28 }}>
+            <Image source={{ uri: productImage(product.images?.[0]) }} className="w-full" style={{ height: 360 }} />
+          </View>
+          <Text className="text-ice mt-4" numberOfLines={2} style={{ fontSize: 26, fontWeight: '300' }}>
             {product.name}
           </Text>
-          <Text className="text-mute text-sm mt-1">{product.vendor?.storeName ?? 'MMall'}</Text>
-          <Text className="text-glow text-lg mt-2">{formatMoney(product.price)}</Text>
-        </View>
+          <Text className="text-mute text-sm mt-1">
+            {product.vendor?.storeName ?? 'MMall'} · {formatMoney(product.price)}
+          </Text>
+        </PressScale>
       </View>
-    </Pressable>
+    </View>
   )
 }

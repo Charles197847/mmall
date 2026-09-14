@@ -1,6 +1,7 @@
 import { FlatList, Pressable, Text, View } from 'react-native'
 import { router } from 'expo-router'
 import { ProductCard } from '../../../components/product/ProductCard'
+import { MallChrome } from '../../../components/mall/MallChrome'
 import { useSavedStore } from '../../../stores/savedStore'
 import { findMockProduct } from '../../../lib/catalog'
 import type { Product } from '@shopping-mall/shared-types'
@@ -32,6 +33,7 @@ export default function SavedScreen() {
 
   return (
     <View className="flex-1 bg-void">
+      <MallChrome />
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}

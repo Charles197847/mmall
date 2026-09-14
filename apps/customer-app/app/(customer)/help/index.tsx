@@ -1,60 +1,173 @@
-import { Pressable, ScrollView, Text, View } from 'react-native'
+import { useState } from 'react'
+import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { Link, router } from 'expo-router'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../../../lib/auth/AuthProvider'
+import { CourtNav } from '../../../components/mall/CourtNav'
+import { MallChrome } from '../../../components/mall/MallChrome'
+import { formatMoney } from '../../../lib/utils/format'
+import { useWalletStore } from '../../../stores/walletStore'
+import { palettes } from '../../../lib/theme'
+import { useThemeStore } from '../../../stores/themeStore'
+import { api } from '../../../lib/api'
 
-const sections = [
-  {
-    title: 'Orders',
-    body: 'Open Orders to track a bag from PayGate through Courier Guy. Guest checkout is not available — sign in first.',
-  },
-  {
-    title: 'Returns',
-    body: 'Most court items can be returned within 7 days if unused and in original packing. Food court and salon slots are final sale.',
-  },
-  {
-    title: 'Delivery',
-    body: 'Set Deliver to on Home so quotes use your city. Courier Guy Eco, Overnight, and Same-day appear at checkout when the route is open.',
-  },
-  {
-    title: 'Payments',
-    body: 'Preview builds use mock PayWeb. No live card is charged. Instant EFT and Visa still show the same return screen.',
-  },
+const jumps = [
+  { id: 'orders', label: 'Orders' },
+  { id: 'returns', label: 'Returns and refunds' },
+  { id: 'account', label: 'Your account' },
+  { id: 'contact', label: 'Contact us' },
+  { id: 'gifts', label: 'Gift card balance' },
+  { id: 'vouchers', label: 'Vouchers earned' },
 ]
 
 export default function HelpScreen() {
-  const { user } = useAuth()
+  const { user, token } = useAuth()
+  const colors = palettes[useThemeStore((state) => state.mode)]
+  const [note, setNote] = useState('')
+  const [section, setSection] = useState('orders')
+  const cards = useWalletStore((state) => state.cards.filter((card) => card.status === 'active' && card.remaining > 0))
+  const vouchers = useWalletStore((state) => state.vouchers)
+  const balance = cards.reduce((sum, card) => sum + card.remaining, 0)
+  const orders = useQuery({
+    queryKey: ['shop-help-orders', token],
+    queryFn: () => api.orders.list(token!),
+    enabled: Boolean(token),
+    retry: false,
+  })
 
   return (
-    <ScrollView className="flex-1 bg-void pt-14" contentContainerClassName="pb-12 px-5">
-      <Text className="text-[11px] tracking-[0.28em] text-mute uppercase">Desk</Text>
-      <Text className="text-3xl font-semibold text-ice mt-1">Customer service</Text>
-      <Text className="text-mute mt-2">Orders, returns, and the shopper desk for MMall.</Text>
+    <View className="flex-1 bg-void">
+      <MallChrome />
+      <ScrollView contentContainerClassName="pb-12">
+        <CourtNav />
+        <View className="px-5">
+          <Text className="text-mute text-sm">Desk</Text>
+          <Text className="text-ice mt-1" style={{ fontSize: 34, fontWeight: '300' }}>
+            Customer service
+          </Text>
+          <Text className="text-mute mt-2">Orders, returns, your account, gift cards, and vouchers — one desk for the mall.</Text>
 
-      {user ? (
-        <Pressable className="mt-5 bg-brand rounded-2xl py-3" onPress={() => router.push('/(customer)/orders')}>
-          <Text className="text-white text-center font-bold">View my orders</Text>
-        </Pressable>
-      ) : (
-        <Link href="/(auth)/login" className="mt-5 text-glow font-semibold">
-          Sign in to see orders
-        </Link>
-      )}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-5" contentContainerClassName="gap-2">
+            {jumps.map((item) => (
+              <Pressable
+                key={item.id}
+                onPress={() => setSection(item.id)}
+                className={`rounded-full border px-3 py-1.5 ${
+                  section === item.id ? 'bg-brand border-brand' : 'bg-panel border-ice/10'
+                }`}
+              >
+                <Text className={`text-xs ${section === item.id ? 'text-white' : 'text-ice'}`}>{item.label}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
 
-      {sections.map((section) => (
-        <View key={section.title} className="mt-6 bg-panel rounded-2xl p-4">
-          <Text className="text-ice font-bold">{section.title}</Text>
-          <Text className="text-mute mt-2 leading-6">{section.body}</Text>
+          {section === 'orders' ? (
+            <View className="mt-6">
+              <Text className="text-ice font-semibold text-xl">Orders</Text>
+              {!token ? (
+                <Link href="/(auth)/login" className="mt-3">
+                  <Text className="text-glow">Sign in to see orders placed on the mall.</Text>
+                </Link>
+              ) : orders.isError ? (
+                <Text className="text-mute mt-2">No live orders on this account yet.</Text>
+              ) : (
+                (orders.data ?? []).map((order) => (
+                  <Pressable
+                    key={order.id}
+                    className="mt-3 rounded-xl bg-panel px-4 py-3"
+                    onPress={() => router.push(`/(customer)/orders/${order.id}`)}
+                  >
+                    <Text className="text-ice font-semibold">#{order.id.slice(0, 8)}</Text>
+                    <Text className="text-mute text-sm mt-1">
+                      {order.status} · {formatMoney(order.totalAmount ?? 0)}
+                    </Text>
+                  </Pressable>
+                ))
+              )}
+              {user ? (
+                <Pressable className="mt-5 bg-brand rounded-full py-3" onPress={() => router.push('/(customer)/orders')}>
+                  <Text className="text-white text-center font-semibold">View my orders</Text>
+                </Pressable>
+              ) : null}
+            </View>
+          ) : null}
+
+          {section === 'returns' ? (
+            <View className="mt-6 bg-panel rounded-2xl p-4">
+              <Text className="text-ice font-semibold">Returns</Text>
+              <Text className="text-mute mt-2 leading-6">
+                Most court items can be returned within 7 days if unused and in original packing. Food court and salon
+                slots are final sale.
+              </Text>
+            </View>
+          ) : null}
+
+          {section === 'account' ? (
+            <View className="mt-6 bg-panel rounded-2xl p-4">
+              <Text className="text-ice font-semibold">Your account</Text>
+              <Text className="text-mute mt-2 leading-6">
+                Sign in to save Deliver to, Loved listings, and PayGate checkout. Profile holds your address and passkeys
+                on web.
+              </Text>
+              <Pressable className="mt-3" onPress={() => router.push('/(customer)/profile')}>
+                <Text className="text-glow">Open profile</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
+          {section === 'gifts' ? (
+            <View className="mt-6 bg-panel rounded-2xl p-4">
+              <Text className="text-ice font-semibold">Gift card balance</Text>
+              <Text className="text-mute mt-2">{formatMoney(balance)} across {cards.length} active cards.</Text>
+              <Pressable className="mt-3" onPress={() => router.push('/(customer)/gift-cards')}>
+                <Text className="text-glow">Open wallet</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
+          {section === 'vouchers' ? (
+            <View className="mt-6 bg-panel rounded-2xl p-4">
+              <Text className="text-ice font-semibold">Vouchers earned</Text>
+              <Text className="text-mute mt-2">{vouchers.length ? vouchers.join(' · ') : 'No vouchers saved yet.'}</Text>
+              <Pressable className="mt-3" onPress={() => router.push('/(customer)/vouchers')}>
+                <Text className="text-glow">Browse vouchers</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
+          {section === 'contact' ? (
+            <View className="mt-6 bg-panel rounded-2xl p-4">
+              <Text className="text-ice font-semibold">Write to the desk</Text>
+              <TextInput
+                className="mt-3 rounded-2xl bg-navy px-4 py-3 text-ice min-h-[96px]"
+                placeholder="What do you need help with?"
+                placeholderTextColor={colors.mute}
+                multiline
+                value={note}
+                onChangeText={setNote}
+              />
+              <Pressable
+                className="mt-3 rounded-full bg-brand py-3"
+                onPress={() => {
+                  setNote('')
+                  Alert.alert('Desk', 'We have the note. Preview builds do not email the mall yet.')
+                }}
+              >
+                <Text className="text-white text-center font-semibold">Send</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
+          <View className="mt-8">
+            <Link href="/(auth)/legal-shopper" className="mb-2">
+              <Text className="text-mute">Shopper Terms</Text>
+            </Link>
+            <Link href="/(auth)/legal-privacy">
+              <Text className="text-mute">Privacy Notice</Text>
+            </Link>
+          </View>
         </View>
-      ))}
-
-      <View className="mt-6">
-        <Link href="/(auth)/legal-shopper" className="text-mute mb-2">
-          Shopper Terms
-        </Link>
-        <Link href="/(auth)/legal-privacy" className="text-mute">
-          Privacy Notice
-        </Link>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   )
 }

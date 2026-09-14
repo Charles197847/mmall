@@ -1,6 +1,24 @@
 import { Platform } from 'react-native'
 import Constants from 'expo-constants'
-import type { AdPlacement, AppNotification, Order, Paginated, Product, ShippingQuote, User, Vendor } from '@shopping-mall/shared-types'
+import type {
+  AdCampaign,
+  AdPlacement,
+  AdSlot,
+  AppNotification,
+  GenerationJob,
+  GenerationQuota,
+  Order,
+  Paginated,
+  PlatformSettings,
+  Product,
+  Shipment,
+  ShippingQuote,
+  User,
+  Vendor,
+  VendorAnalytics,
+  VendorKyc,
+  VendorOrderRow,
+} from '@shopping-mall/shared-types'
 
 function lanHost() {
   const hostUri = Constants.expoConfig?.hostUri ?? Constants.linkingUri
@@ -94,6 +112,7 @@ export const api = {
     sendMagicLink: (body: {
       email: string
       purpose?: 'login' | 'signup'
+      role?: 'CUSTOMER' | 'VENDOR'
       firstName?: string
       lastName?: string
     }) =>
@@ -108,11 +127,31 @@ export const api = {
         headers: getHeaders(),
         body: JSON.stringify({ token }),
       }),
-    startOAuth: (provider: 'google' | 'apple') =>
-      request<{ url?: string }>('/auth/oauth/' + provider + '/start', {
+    startOAuth: (provider: 'google' | 'apple', role: 'CUSTOMER' | 'VENDOR' = 'CUSTOMER') =>
+      request<{ url?: string; error?: string }>('/auth/oauth/' + provider + '/start', {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ role: 'CUSTOMER' }),
+        body: JSON.stringify({ role }),
+      }),
+    sendOtp: (body: { phone: string }) =>
+      request<{ otpId: string; demoCode?: string }>('/auth/otp/send', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(body),
+      }),
+    registerVendor: (body: {
+      fullName: string
+      email: string
+      phone: string
+      password: string
+      otpId: string
+      otpCode: string
+      storeName?: string
+    }) =>
+      request<AuthResponse>('/auth/register/vendor', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(body),
       }),
     me: (token: string) =>
       request<User & { vendor?: Vendor | null }>('/auth/me', {
@@ -189,6 +228,49 @@ export const api = {
   vendors: {
     get: (slug: string) => request<Vendor>(`/vendors/${slug}`),
     list: () => request<Vendor[]>('/vendors'),
+    analytics: (token: string) =>
+      request<VendorAnalytics>('/vendors/store/analytics', { headers: getHeaders(token) }),
+    update: (body: Partial<Vendor>, token: string) =>
+      request<Vendor>('/vendors/store', {
+        method: 'PUT',
+        headers: getHeaders(token),
+        body: JSON.stringify(body),
+      }),
+    pricing: (token: string) =>
+      request<PlatformSettings>('/vendors/store/pricing', { headers: getHeaders(token) }),
+    products: {
+      list: (token: string) =>
+        request<Paginated<Product>>('/products/mine', { headers: getHeaders(token) }),
+      create: (body: Partial<Product>, token: string) =>
+        request<Product>('/products', {
+          method: 'POST',
+          headers: getHeaders(token),
+          body: JSON.stringify(body),
+        }),
+      update: (id: string, body: Partial<Product>, token: string) =>
+        request<Product>(`/products/${id}`, {
+          method: 'PUT',
+          headers: getHeaders(token),
+          body: JSON.stringify(body),
+        }),
+      delete: (id: string, token: string) =>
+        request<void>(`/products/${id}`, { method: 'DELETE', headers: getHeaders(token) }),
+    },
+    orders: {
+      list: (token: string) => request<VendorOrderRow[]>('/orders', { headers: getHeaders(token) }),
+      updateStatus: (orderId: string, status: string, token: string) =>
+        request<VendorOrderRow>(`/orders/${orderId}/status`, {
+          method: 'PATCH',
+          headers: getHeaders(token),
+          body: JSON.stringify({ status }),
+        }),
+      bookCourier: (vendorOrderId: string, token: string, serviceLevelCode: 'ECO' | 'OVN' | 'SDD' = 'ECO') =>
+        request<Shipment>(`/shipping/vendor-orders/${vendorOrderId}/book`, {
+          method: 'POST',
+          headers: getHeaders(token),
+          body: JSON.stringify({ serviceLevelCode }),
+        }),
+    },
   },
 
   orders: {
@@ -213,6 +295,54 @@ export const api = {
         { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) },
       ),
     track: (trackingNumber: string) => request(`/shipping/track/${trackingNumber}`),
+    advance: (shipmentId: string, token: string) =>
+      request<Shipment>(`/shipping/${shipmentId}/advance`, {
+        method: 'POST',
+        headers: getHeaders(token),
+      }),
+  },
+
+  payments: {
+    registerPayout: (token: string) =>
+      request<{ beneficiaryId: string; provider: string; message: string }>('/payments/payouts/register', {
+        method: 'POST',
+        headers: getHeaders(token),
+      }),
+  },
+
+  studio: {
+    quota: (token: string) =>
+      request<{ items: GenerationQuota[] }>('/studio/quota', { headers: getHeaders(token) }),
+    jobs: (token: string) =>
+      request<{ items: GenerationJob[] }>('/studio/jobs', { headers: getHeaders(token) }),
+    generate: (body: { assetType: 'LOGO' | 'BANNER'; prompt: string }, token: string) =>
+      request<{ job: GenerationJob; quota: GenerationQuota }>('/studio/generate', {
+        method: 'POST',
+        headers: getHeaders(token),
+        body: JSON.stringify(body),
+      }),
+    topup: (body: { assetType: 'LOGO' | 'BANNER'; quantity: number }, token: string) =>
+      request<{ quota: GenerationQuota; charged: number; currency: string }>('/studio/topup', {
+        method: 'POST',
+        headers: getHeaders(token),
+        body: JSON.stringify(body),
+      }),
+    apply: (body: { jobId: string }, token: string) =>
+      request<{ job: GenerationJob; vendor: Vendor }>('/studio/apply', {
+        method: 'POST',
+        headers: getHeaders(token),
+        body: JSON.stringify(body),
+      }),
+  },
+
+  kyc: {
+    me: (token: string) => request<VendorKyc>('/kyc/me', { headers: getHeaders(token) }),
+    submit: (body: Record<string, unknown>, token: string) =>
+      request<VendorKyc>('/kyc/submit', {
+        method: 'POST',
+        headers: getHeaders(token),
+        body: JSON.stringify(body),
+      }),
   },
 
   user: {
@@ -232,6 +362,26 @@ export const api = {
       request<{ ok: boolean }>(`/ads/${id}/impression`, { method: 'POST', headers: getHeaders() }),
     click: (id: string) =>
       request<{ ok: boolean }>(`/ads/${id}/click`, { method: 'POST', headers: getHeaders() }),
+    mine: (token: string) => request<{ items: AdCampaign[] }>('/ads/mine', { headers: getHeaders(token) }),
+    create: (
+      body: {
+        slot: AdSlot
+        title: string
+        headline?: string
+        imageUrl?: string
+        startsAt: string
+        endsAt: string
+        audienceSize?: number
+      },
+      token: string,
+    ) =>
+      request<AdCampaign>('/ads', {
+        method: 'POST',
+        headers: getHeaders(token),
+        body: JSON.stringify(body),
+      }),
+    purchase: (id: string, token: string) =>
+      request<AdCampaign>(`/ads/${id}/purchase`, { method: 'POST', headers: getHeaders(token) }),
   },
 
   notifications: {
