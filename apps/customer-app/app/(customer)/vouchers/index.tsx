@@ -4,6 +4,7 @@ import { router } from 'expo-router'
 import { formatMoney } from '../../../lib/utils/format'
 import { CourtNav } from '../../../components/mall/CourtNav'
 import { MallChrome } from '../../../components/mall/MallChrome'
+import { PageTitle } from '../../../components/mall/PageTitle'
 import { MallCardFace } from '../../../components/shop/MallCardFace'
 import { shopVouchers, useWalletStore } from '../../../stores/walletStore'
 
@@ -17,13 +18,11 @@ export default function VouchersScreen() {
       <MallChrome />
       <ScrollView contentContainerClassName="pb-12">
         <CourtNav />
-        <View className="px-5">
-          <Text className="text-mute text-sm">Offers</Text>
-          <Text className="text-ice mt-1" style={{ fontSize: 34, fontWeight: '300' }}>
-            Promotional vouchers
-          </Text>
-          <Text className="text-mute mt-2">Tap a card to render it. Save it, then apply the code at checkout.</Text>
-        </View>
+        <PageTitle
+          kicker="Offers"
+          title="Promotional vouchers"
+          lede="Tap a card to render it. Save it, then apply the code at checkout."
+        />
         <View className="px-5 mt-6">
           {shopVouchers.map((voucher) => (
             <Pressable key={voucher.code} className="mb-4" onPress={() => setSelected(voucher)}>

@@ -2,18 +2,20 @@ import { useState } from 'react'
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { Link, router } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useAuth } from '../../../lib/auth/AuthProvider'
 import { BrandMark } from '../../../components/brand/BrandMark'
 import { ThemeToggle } from '../../../components/theme/ThemeToggle'
 import { useThemeStore } from '../../../stores/themeStore'
 import { api } from '../../../lib/api'
 import { passkeysAvailable } from '../../../lib/passkeys'
-import { CourtNav } from '../../../components/mall/CourtNav'
-import { mmall } from '../../../lib/theme'
+import { palettes } from '../../../lib/theme'
 
 export default function ProfileScreen() {
   const { user, logout, token, registerPasskey, applyUser } = useAuth()
   const mode = useThemeStore((state) => state.mode)
+  const colors = palettes[mode]
+  const insets = useSafeAreaInsets()
   const { data: notes } = useQuery({
     queryKey: ['notifications', token],
     queryFn: () => api.notifications.list(token!),
@@ -57,15 +59,12 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 p-6 bg-void" contentContainerClassName="pb-12">
+    <ScrollView className="flex-1 bg-void" contentContainerStyle={{ padding: 20, paddingTop: insets.top + 12, paddingBottom: 48 }}>
       <View className="flex-row items-center justify-between">
         <BrandMark compact />
         <ThemeToggle />
       </View>
-      <View className="mt-6 -mx-6">
-        <CourtNav />
-      </View>
-      <Text className="text-2xl font-bold mb-1 text-ice">Profile</Text>
+      <Text className="text-2xl font-bold mt-5 mb-1 text-ice">Profile</Text>
       <Text className="text-mute mb-4">{mode === 'dark' ? 'Dark grid' : 'Light grid'} appearance</Text>
       {user ? (
         <View className="bg-panel rounded-2xl p-4">
@@ -73,9 +72,7 @@ export default function ProfileScreen() {
             {user.firstName} {user.lastName}
           </Text>
           <Text className="text-mute mb-4">{user.email}</Text>
-          <Pressable
-            className="bg-brand rounded-2xl py-3 mb-3"
-            onPress={() => router.push('/(customer)/orders')}
+          <Pressable className="bg-brand rounded-2xl py-3.5 mb-3" onPress={() => router.push('/(customer)/orders')}
             accessibilityRole="button"
             accessibilityLabel="View orders"
           >
@@ -128,29 +125,33 @@ export default function ProfileScreen() {
           <Text className="text-ice font-bold mb-3">Delivery address</Text>
           <TextInput
             className="bg-navy rounded-xl px-3 py-3 text-ice mb-2"
+            style={{ minHeight: 44 }}
             placeholder="Street"
-            placeholderTextColor={mmall.mute}
+            placeholderTextColor={colors.mute}
             value={street}
             onChangeText={setStreet}
           />
           <TextInput
             className="bg-navy rounded-xl px-3 py-3 text-ice mb-2"
+            style={{ minHeight: 44 }}
             placeholder="City"
-            placeholderTextColor={mmall.mute}
+            placeholderTextColor={colors.mute}
             value={city}
             onChangeText={setCity}
           />
           <TextInput
             className="bg-navy rounded-xl px-3 py-3 text-ice mb-2"
+            style={{ minHeight: 44 }}
             placeholder="Province"
-            placeholderTextColor={mmall.mute}
+            placeholderTextColor={colors.mute}
             value={state}
             onChangeText={setState}
           />
           <TextInput
             className="bg-navy rounded-xl px-3 py-3 text-ice mb-3"
+            style={{ minHeight: 44 }}
             placeholder="Postal code"
-            placeholderTextColor={mmall.mute}
+            placeholderTextColor={colors.mute}
             value={postalCode}
             onChangeText={setPostalCode}
           />
