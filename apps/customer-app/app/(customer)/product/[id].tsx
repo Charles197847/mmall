@@ -100,18 +100,17 @@ export default function ProductDetailScreen() {
   const already = inCart(item.id, picks)
 
   return (
-    <ScrollView className="flex-1 bg-void" contentContainerClassName="pb-12">
+    <View className="flex-1 bg-void">
       <MallChrome />
-      <View className="px-4 py-3">
-        <Pressable onPress={() => router.push('/(customer)')}>
-          <Text className="text-mute text-sm">Mall</Text>
-        </Pressable>
-        {item.category ? (
-          <Pressable onPress={() => router.push(`/(customer)/browse?category=${item.category}`)}>
-            <Text className="text-mute text-sm"> / {item.category}</Text>
-          </Pressable>
-        ) : null}
-      </View>
+      <ScrollView className="flex-1" contentContainerClassName="pb-12">
+      <Pressable
+        onPress={() => router.back()}
+        className="px-4 flex-row items-center"
+        style={{ minHeight: 44 }}
+        accessibilityLabel="Go back"
+      >
+        <Text className="text-mute text-sm">‹ Back</Text>
+      </Pressable>
       <View>
         <Image
           source={{ uri: productImage(item.images?.[photo] ?? item.images?.[0]) }}
@@ -140,7 +139,7 @@ export default function ProductDetailScreen() {
             <Text className="text-mute text-xs tracking-widest uppercase">{item.category}</Text>
           </Pressable>
         ) : null}
-        <Text className="text-3xl font-semibold text-ice mt-1">{item.name}</Text>
+        <Text className="text-2xl font-semibold text-ice mt-1">{item.name}</Text>
         {item.vendor ? (
           <Pressable onPress={() => router.push(`/(customer)/vendor/${item.vendor!.slug}`)}>
             <Text className="text-glow mt-2">Visit {item.vendor.storeName}</Text>
@@ -201,14 +200,14 @@ export default function ProductDetailScreen() {
           <Text className="text-ice font-semibold">Quantity</Text>
           <View className="flex-row items-center">
             <Pressable
-              className="w-9 h-9 rounded-full bg-panel items-center justify-center"
+              className="w-10 h-10 rounded-full bg-panel items-center justify-center"
               onPress={() => setQuantity((value) => Math.max(1, value - 1))}
             >
               <Text className="text-ice text-lg">−</Text>
             </Pressable>
             <Text className="w-10 text-center text-ice">{quantity}</Text>
             <Pressable
-              className="w-9 h-9 rounded-full bg-panel items-center justify-center"
+              className="w-10 h-10 rounded-full bg-panel items-center justify-center"
               onPress={() => setQuantity((value) => Math.min(8, value + 1))}
             >
               <Text className="text-ice text-lg">+</Text>
@@ -256,5 +255,6 @@ export default function ProductDetailScreen() {
         onSeeAll={item.category ? () => router.push(`/(customer)/browse?category=${item.category}`) : undefined}
       />
     </ScrollView>
+    </View>
   )
 }

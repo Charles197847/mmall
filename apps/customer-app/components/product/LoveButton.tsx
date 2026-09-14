@@ -16,7 +16,7 @@ export function LoveButton({ product }: { product: Pick<Product, 'id' | 'name' |
       onPress={() => toggle(toSavedItem(product))}
       accessibilityRole="button"
       accessibilityLabel={saved ? `Remove ${product.name} from saved` : `Save ${product.name}`}
-      className="absolute top-2 right-2 z-10 w-9 h-9 rounded-full bg-navy/80 items-center justify-center"
+      className="absolute top-2 right-3.5 z-10 w-10 h-10 rounded-full bg-navy/80 items-center justify-center"
     >
       <Feather name="heart" size={16} color={saved ? colors.signal : colors.ice} />
     </Pressable>

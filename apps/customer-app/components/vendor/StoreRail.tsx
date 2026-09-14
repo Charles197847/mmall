@@ -26,7 +26,7 @@ export function StoreRail({
   if (!loading && shops.length === 0) return null
 
   return (
-    <View className="mb-10">
+    <View className="mb-6">
       <View className="px-4 mb-3 flex-row justify-between items-end">
         <View className="flex-1 pr-3">
           <Text className="text-xl font-semibold text-ice">{title}</Text>

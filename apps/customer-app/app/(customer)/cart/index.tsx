@@ -3,7 +3,9 @@ import { router } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
 import { useCartStore } from '../../../stores/cartStore'
 import { productImage } from '../../../lib/utils/images'
-import { mmall } from '../../../lib/theme'
+import { palettes } from '../../../lib/theme'
+import { useThemeStore } from '../../../stores/themeStore'
+import { layout } from '../../../lib/layout'
 
 export default function CartScreen() {
   const items = useCartStore((s) => s.items)
@@ -12,17 +14,19 @@ export default function CartScreen() {
   const updateQuantity = useCartStore((s) => s.updateQuantity)
   const removeItem = useCartStore((s) => s.removeItem)
   const clearCart = useCartStore((s) => s.clearCart)
+  const colors = palettes[useThemeStore((state) => state.mode)]
 
   const vendorGroups = Array.from(getItemsByVendor().entries())
 
   if (items.length === 0) {
     return (
-      <View className="flex-1 justify-center items-center bg-void">
-        <Feather name="shopping-bag" size={64} color={mmall.mute} />
+      <View className="flex-1 justify-center items-center bg-void px-6">
+        <Feather name="shopping-bag" size={56} color={colors.mute} />
         <Text className="text-lg text-mute mt-4">Your bag is empty</Text>
         <TouchableOpacity
           onPress={() => router.push('/(customer)/browse')}
-          className="mt-4 bg-brand px-6 py-3 rounded-2xl"
+          className="mt-4 bg-brand px-6 items-center justify-center rounded-2xl"
+          style={{ minHeight: layout.tap }}
         >
           <Text className="text-white font-semibold">Start shopping</Text>
         </TouchableOpacity>
@@ -35,7 +39,7 @@ export default function CartScreen() {
       <FlatList
         data={vendorGroups}
         keyExtractor={([vendorId]) => vendorId}
-        contentContainerClassName="p-4 pb-36"
+        contentContainerClassName="p-4 pb-40"
         renderItem={({ item: [, vendorItems] }) => (
           <View className="bg-panel rounded-2xl p-4 mb-4">
             <Text className="font-bold text-lg mb-3 text-ice">{vendorItems[0].vendorName}</Text>
@@ -60,20 +64,24 @@ export default function CartScreen() {
                   <Text className="text-glow font-bold mt-1">R{item.price.toFixed(2)}</Text>
                   <View className="flex-row items-center mt-2">
                     <TouchableOpacity
-                      className="w-7 h-7 border border-glow/30 rounded-lg items-center justify-center"
+                      className="w-10 h-10 border border-glow/30 rounded-xl items-center justify-center"
                       onPress={() => updateQuantity(item.lineKey, item.quantity - 1)}
                     >
                       <Text className="text-lg text-ice">−</Text>
                     </TouchableOpacity>
                     <Text className="w-8 text-center text-ice">{item.quantity}</Text>
                     <TouchableOpacity
-                      className="w-7 h-7 border border-glow/30 rounded-lg items-center justify-center"
+                      className="w-10 h-10 border border-glow/30 rounded-xl items-center justify-center"
                       onPress={() => updateQuantity(item.lineKey, item.quantity + 1)}
                     >
                       <Text className="text-lg text-ice">+</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity className="ml-auto" onPress={() => removeItem(item.lineKey)}>
-                      <Feather name="trash-2" size={20} color={mmall.signal} />
+                    <TouchableOpacity
+                      className="ml-auto w-10 h-10 items-center justify-center"
+                      onPress={() => removeItem(item.lineKey)}
+                      accessibilityLabel={`Remove ${item.name}`}
+                    >
+                      <Feather name="trash-2" size={20} color={colors.signal} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -89,18 +97,22 @@ export default function CartScreen() {
         )}
       />
 
-      <View className="absolute bottom-0 left-0 right-0 bg-navy p-4">
+      <View
+        className="absolute bottom-0 left-0 right-0 bg-navy px-4 pt-3 border-t border-ice/10"
+        style={{ paddingBottom: 12 }}
+      >
         <View className="flex-row justify-between mb-3">
           <Text className="text-mute">Total ({items.length} items)</Text>
           <Text className="text-xl font-bold text-ice">R{getTotal().toFixed(2)}</Text>
         </View>
         <TouchableOpacity
-          className="bg-signal py-3 rounded-2xl"
+          className="bg-signal rounded-2xl items-center justify-center"
+          style={{ minHeight: layout.tap }}
           onPress={() => router.push('/(customer)/cart/checkout')}
         >
           <Text className="text-white text-center font-bold text-lg">Proceed to checkout</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="mt-3" onPress={clearCart}>
+        <TouchableOpacity className="mt-2 items-center justify-center" style={{ minHeight: 36 }} onPress={clearCart}>
           <Text className="text-mute text-center">Clear basket</Text>
         </TouchableOpacity>
       </View>

@@ -1,8 +1,7 @@
-import { Image, Pressable, ScrollView, Text, View } from 'react-native'
+import { Image, ScrollView, Text, View } from 'react-native'
 import { useQuery } from '@tanstack/react-query'
 import { router } from 'expo-router'
 import { useAuth } from '../../lib/auth/AuthProvider'
-import { BrandMark } from '../../components/brand/BrandMark'
 import { MallChrome } from '../../components/mall/MallChrome'
 import { MallDirectory } from '../../components/mall/MallDirectory'
 import { HeroDrop } from '../../components/mall/HeroDrop'
@@ -17,6 +16,7 @@ import { loadProducts, loadVendors, mockFeatured, mockProductsFor, mockVendors }
 import { mallCategories } from '../../lib/mallCategories'
 import { mallSpecials } from '../../lib/mallOffers'
 import { applyShopFilter } from '../../lib/shopFilters'
+import { layout } from '../../lib/layout'
 import { palettes } from '../../lib/theme'
 import { useThemeStore } from '../../stores/themeStore'
 import { useFilterStore } from '../../stores/filterStore'
@@ -66,19 +66,18 @@ export default function HomeScreen() {
     <View className="flex-1" style={{ backgroundColor: paper }}>
       <MallChrome />
       <ScrollView nestedScrollEnabled contentContainerClassName="pb-8">
-        <View style={{ height: 180, overflow: 'hidden' }}>
+        <View style={{ height: layout.heroBanner, overflow: 'hidden' }}>
           <Image
             source={require('../../assets/mmall-web-banner.png')}
             className="absolute inset-0 w-full h-full"
             resizeMode="cover"
           />
           <View className="absolute inset-0 bg-black/40" />
-          <View className="absolute left-5 right-5 bottom-6">
-            <BrandMark compact onDark />
-            <Text className="text-white mt-3" style={{ fontSize: 42, lineHeight: 44, fontWeight: '300' }}>
+          <View className="absolute left-4 right-4 bottom-4">
+            <Text className="text-white" style={{ fontSize: 32, lineHeight: 34, fontWeight: '300' }}>
               Open.
             </Text>
-            <Text className="text-white/80 mt-1">
+            <Text className="text-white/80 mt-1 text-sm">
               {user ? `Welcome back, ${user.firstName}.` : 'The digital shopping mall.'}
             </Text>
           </View>

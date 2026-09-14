@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, FlatList, Image, Pressable, Text, TextInput, View } from 'react-native'
+import { ActivityIndicator, FlatList, Image, Pressable, Text, View } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 import { ProductCard } from '../../../components/product/ProductCard'
@@ -10,9 +10,11 @@ import { StoreWindow } from '../../../components/mall/StoreWindow'
 import { AdSlot } from '../../../components/ads/AdSlot'
 import { MallChrome } from '../../../components/mall/MallChrome'
 import { FilterBar } from '../../../components/mall/FilterBar'
+import { PageTitle } from '../../../components/mall/PageTitle'
 import { loadProducts, loadVendors, mockFeatured, mockProductsFor, productMatchesQuery } from '../../../lib/catalog'
 import { courtById, courtForCategory, mallCourts } from '../../../lib/courts'
 import { applyShopFilter } from '../../../lib/shopFilters'
+import { productGrid } from '../../../lib/layout'
 import { palettes } from '../../../lib/theme'
 import { useThemeStore } from '../../../stores/themeStore'
 import { useFilterStore } from '../../../stores/filterStore'
@@ -100,21 +102,6 @@ export default function BrowseScreen() {
   const searching = mallWide && productsQuery.isLoading && !productsQuery.data
   const noMatch = !searching && !items.length && !shops.length && !courts.length
   const directoryOnly = !court && !params.category && !mallWide && !filter.category
-
-  const findField = (
-    <TextInput
-      className="mx-5 mt-2 mb-4 border-b border-ice/10 pb-3 text-[18px] font-light text-ice"
-      placeholder="Find across the mall"
-      placeholderTextColor={colors.mute}
-      value={search}
-      onChangeText={setSearch}
-      returnKeyType="search"
-      onSubmitEditing={() => {
-        if (!court && !params.category) router.setParams({ q: query })
-      }}
-    />
-  )
-
   const title = query ? `Results for “${query}”` : filter.category || court?.name || 'Browse'
 
   return (
@@ -123,36 +110,28 @@ export default function BrowseScreen() {
       <FlatList
         data={directoryOnly ? [] : rest}
         keyExtractor={(item) => item.id}
-        numColumns={2}
+        numColumns={productGrid.numColumns}
+        columnWrapperStyle={directoryOnly ? undefined : productGrid.columnWrapperStyle}
         renderItem={({ item }) => <ProductCard product={item} />}
         contentContainerClassName="pb-10"
         ListHeaderComponent={
           <View>
-            {court?.cover ? <Image source={{ uri: court.cover }} className="w-full h-52 bg-navy" /> : null}
-            <View className="pt-4">
-              <CourtNav />
-            </View>
-            <View className="px-5 mb-2">
-              <Text className="text-mute text-sm">{court?.level ?? 'Mall'}</Text>
-              <Text className="text-ice mt-1" style={{ fontSize: 34, lineHeight: 38, fontWeight: '300' }}>
-                {title}
-              </Text>
-              {court ? <Text className="text-mute mt-2">{court.line}</Text> : null}
-            </View>
-            {findField}
+            {court?.cover ? <Image source={{ uri: court.cover }} className="w-full h-44 bg-navy" /> : null}
+            <CourtNav />
+            <PageTitle kicker={court?.level ?? 'Mall'} title={title} lede={court?.line} />
             <FilterBar />
             <AdSlot slot="SEARCH_FEATURE" />
             {directoryOnly ? <MallDirectory variant="index" /> : null}
             {courts.length ? (
-              <View className="px-5 mb-6">
-                <Text className="text-mute text-sm mb-3">Courts</Text>
+              <View className="px-4 mb-5">
+                <Text className="text-mute text-sm mb-2">Courts</Text>
                 {courts.map((row) => (
                   <Pressable
                     key={row.id}
-                    className="mb-3"
+                    className="py-2.5"
                     onPress={() => router.push(`/(customer)/browse?court=${row.id}` as never)}
                   >
-                    <Text className="text-ice" style={{ fontSize: 22, fontWeight: '300' }}>
+                    <Text className="text-ice" style={{ fontSize: 20, fontWeight: '300' }}>
                       {row.name}
                     </Text>
                     <Text className="text-mute">{row.line}</Text>
@@ -161,8 +140,8 @@ export default function BrowseScreen() {
               </View>
             ) : null}
             {shops.length ? (
-              <View className="mb-6">
-                <Text className="px-5 text-mute text-sm mb-2">Shops</Text>
+              <View className="mb-5">
+                <Text className="px-4 text-mute text-sm mb-2">Shops</Text>
                 {shops.slice(0, 6).map((vendor) => (
                   <StoreWindow key={vendor.id} vendor={vendor} />
                 ))}
@@ -174,7 +153,7 @@ export default function BrowseScreen() {
               </View>
             ) : null}
             {hero && !directoryOnly ? (
-              <View className="mt-2 mb-6">
+              <View className="mt-1 mb-4">
                 <HeroDrop product={hero} showHeading={false} />
               </View>
             ) : null}
@@ -182,7 +161,7 @@ export default function BrowseScreen() {
         }
         ListEmptyComponent={
           directoryOnly || searching ? null : noMatch ? (
-            <Text className="px-5 text-mute">Nothing matches that search.</Text>
+            <Text className="px-4 text-mute">Nothing matches that search.</Text>
           ) : null
         }
       />

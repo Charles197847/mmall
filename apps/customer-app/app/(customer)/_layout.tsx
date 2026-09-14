@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router'
 import { Text, View } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useCartStore } from '../../stores/cartStore'
 import { headerOptions, palettes } from '../../lib/theme'
 import { useThemeStore } from '../../stores/themeStore'
@@ -11,6 +12,8 @@ export default function CustomerLayout() {
   const cartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0))
   const mode = useThemeStore((state) => state.mode)
   const colors = palettes[mode]
+  const insets = useSafeAreaInsets()
+  const tabPad = Math.max(insets.bottom, 8)
 
   return (
     <View className="flex-1">
@@ -28,11 +31,11 @@ export default function CustomerLayout() {
           borderTopColor: mode === 'light' ? '#E6E7EA' : '#1A2748',
           elevation: 0,
           shadowOpacity: 0,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 62,
+          paddingBottom: tabPad,
+          paddingTop: 6,
+          height: 50 + tabPad,
         },
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '400' },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '500' },
       }}
     >
       <Tabs.Screen
@@ -89,6 +92,7 @@ export default function CustomerLayout() {
         name="profile/index"
         options={{
           title: 'Profile',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => <Feather name="user" size={size} color={color} />,
         }}
       />

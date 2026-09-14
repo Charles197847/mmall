@@ -43,15 +43,20 @@ const columns = [
 
 export function MallFooter() {
   return (
-    <View className="mt-8 px-5 pb-10">
-      <Pressable onPress={() => router.push('/(customer)')} className="py-3 items-center">
+    <View className="mt-6 px-4 pb-8">
+      <Pressable onPress={() => router.push('/(customer)')} className="py-3 items-center" style={{ minHeight: 44, justifyContent: 'center' }}>
         <Text className="text-sm text-mute">Back to top</Text>
       </Pressable>
       {columns.map((column) => (
-        <View key={column.title} className="mt-6">
+        <View key={column.title} className="mt-5">
           <Text className="text-sm font-semibold text-ice">{column.title}</Text>
           {column.links.map((link) => (
-            <Pressable key={link.label} className="mt-2.5" onPress={() => router.push(link.href as never)}>
+            <Pressable
+              key={link.label}
+              className="justify-center"
+              style={{ minHeight: 40 }}
+              onPress={() => router.push(link.href as never)}
+            >
               <Text className="text-sm text-mute">{link.label}</Text>
             </Pressable>
           ))}

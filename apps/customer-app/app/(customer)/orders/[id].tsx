@@ -3,11 +3,13 @@ import { useLocalSearchParams } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../../../lib/auth/AuthProvider'
 import { api } from '../../../lib/api'
-import { mmall } from '../../../lib/theme'
+import { palettes } from '../../../lib/theme'
+import { useThemeStore } from '../../../stores/themeStore'
 
 export default function OrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { token } = useAuth()
+  const colors = palettes[useThemeStore((state) => state.mode)]
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', id],
@@ -18,7 +20,7 @@ export default function OrderDetailScreen() {
   if (isLoading || !order) {
     return (
       <View className="flex-1 justify-center items-center bg-void">
-        {isLoading ? <ActivityIndicator size="large" color={mmall.glow} /> : <Text className="text-ice">Order not found</Text>}
+        {isLoading ? <ActivityIndicator size="large" color={colors.glow} /> : <Text className="text-ice">Order not found</Text>}
       </View>
     )
   }

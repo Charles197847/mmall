@@ -1,5 +1,6 @@
 import { ScrollView, Text, Pressable, View } from 'react-native'
 import { router, usePathname } from 'expo-router'
+import { layout } from '../../lib/layout'
 
 export const courtLinks = [
   { href: '/(customer)', label: 'Home', icon: '⌂', match: 'home' },
@@ -15,8 +16,12 @@ export function CourtNav() {
   const path = usePathname() ?? ''
 
   return (
-    <View className="mb-6" accessibilityLabel="Mall pages">
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 6 }}>
+    <View className="mb-4 mt-3" accessibilityLabel="Mall pages">
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: layout.pageX, gap: 8 }}
+      >
         {courtLinks.map((item) => {
           const active =
             item.match === 'home'
@@ -26,12 +31,13 @@ export function CourtNav() {
             <Pressable
               key={item.href}
               onPress={() => router.push(item.href as never)}
-              className={`flex-row items-center rounded-full border px-2.5 py-1.5 ${
+              className={`flex-row items-center rounded-full border px-3.5 ${
                 active ? 'bg-brand border-brand' : 'bg-panel border-ice/10'
               }`}
+              style={{ minHeight: layout.chip }}
             >
               <Text className="mr-1">{item.icon}</Text>
-              <Text className={`text-xs ${active ? 'text-white' : 'text-ice'}`}>{item.label}</Text>
+              <Text className={`text-sm ${active ? 'text-white' : 'text-ice'}`}>{item.label}</Text>
             </Pressable>
           )
         })}

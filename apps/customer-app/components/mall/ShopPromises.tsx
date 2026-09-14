@@ -13,10 +13,10 @@ const items = [
 export function ShopPromises() {
   const colors = palettes[useThemeStore((state) => state.mode)]
   return (
-    <View className="flex-row flex-wrap gap-x-5 gap-y-2">
+    <View className="flex-row flex-wrap" style={{ gap: 10 }}>
       {items.map((item) => (
         <View key={item.label} className="flex-row items-center">
-          <Feather name={item.icon} size={16} color={colors.ice} />
+          <Feather name={item.icon} size={14} color={colors.ice} />
           <Text className="ml-1.5 text-xs text-mute">{item.label}</Text>
         </View>
       ))}
