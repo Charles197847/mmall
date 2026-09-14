@@ -5,8 +5,8 @@ import { useThemeStore } from '../../stores/themeStore'
 import { PressScale } from '../ui/PressScale'
 import { SectionHead } from './SectionHead'
 
-const GAP = 14
-const SIDE = 20
+const GAP = 12
+const SIDE = 16
 
 export function MallDirectory({
   variant = 'walk',
@@ -22,12 +22,12 @@ export function MallDirectory({
     return (
       <View>
         {showHeading ? <SectionHead kicker="The building" title="Courts" /> : null}
-        <View className="px-5">
+        <View className="px-4">
           {mallCourts.map((court, i) => (
             <Pressable
               key={court.id}
               onPress={() => router.push(`/(customer)/browse?court=${court.id}`)}
-              className="flex-row items-center py-5"
+              className="flex-row items-center py-4"
               style={{ borderBottomWidth: 1, borderBottomColor: rule }}
             >
               <Text className="w-10 text-ice/40" style={{ fontSize: 22, fontWeight: '300' }}>
@@ -75,7 +75,7 @@ export function MallDirectory({
             accessibilityRole="button"
             accessibilityLabel={`${court.name}, ${court.level}`}
           >
-            <View className="overflow-hidden bg-navy" style={{ height: 280, borderRadius: 28 }}>
+            <View className="overflow-hidden bg-navy" style={{ height: 232, borderRadius: 22 }}>
               <Image source={{ uri: court.cover }} className="absolute inset-0 w-full h-full" />
               <View className="absolute inset-0 bg-black/30" />
               <Text
@@ -86,7 +86,7 @@ export function MallDirectory({
               </Text>
               <View className="absolute bottom-5 left-5 right-5">
                 <Text className="text-white/70 text-sm">{court.level}</Text>
-                <Text className="text-white mt-0.5" style={{ fontSize: 28, fontWeight: '300' }}>
+                <Text className="text-white mt-0.5" style={{ fontSize: 24, fontWeight: '300' }}>
                   {court.name}
                 </Text>
                 <Text className="text-white/70 text-sm mt-1">{court.line}</Text>

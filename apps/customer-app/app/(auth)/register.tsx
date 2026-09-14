@@ -44,7 +44,7 @@ export default function RegisterScreen() {
         <Text className="text-mute mt-2 mb-6">One bag across every shop in the mall.</Text>
 
         <Pressable className="flex-row items-start mb-5" onPress={() => setAccepted((value) => !value)}>
-          <View className={`w-5 h-5 rounded border mr-3 mt-0.5 ${accepted ? 'bg-brand border-brand' : 'border-mute'}`} />
+          <View className={`w-6 h-6 rounded border mr-3 mt-0.5 items-center justify-center ${accepted ? 'bg-brand border-brand' : 'border-mute'}`} />
           <Text className="text-mute flex-1 leading-5">
             I agree to the{' '}
             <Link href="/(auth)/legal-shopper">

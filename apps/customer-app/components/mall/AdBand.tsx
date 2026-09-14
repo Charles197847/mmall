@@ -6,7 +6,7 @@ export function AdBand({ label }: { label: string }) {
   const items = mockAds(label, 2)
 
   return (
-    <View className="mb-10 px-4">
+    <View className="mb-6 px-4">
       <Text className="mb-3 text-[10px] tracking-[0.2em] text-mute">SPONSORED</Text>
       {items.map((ad) => (
         <Pressable

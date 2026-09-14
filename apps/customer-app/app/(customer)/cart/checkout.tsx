@@ -8,10 +8,9 @@ import { quoteCourierGuy, searchSaPlaces, shopperAreaFromAddress } from '@shoppi
 import { useCartStore } from '../../../stores/cartStore'
 import { useAuth } from '../../../lib/auth/AuthProvider'
 import { api } from '../../../lib/api'
-import { mmall } from '../../../lib/theme'
-import { useAreaStore } from '../../../stores/areaStore'
 import { palettes } from '../../../lib/theme'
 import { useThemeStore } from '../../../stores/themeStore'
+import { useAreaStore } from '../../../stores/areaStore'
 import { persistShopperArea } from '../../../lib/location'
 import { formatMoney } from '../../../lib/utils/format'
 import { clearPendingCheckout, isDemoSku, rememberPendingCheckout } from '../../../lib/pendingCheckout'
@@ -187,7 +186,7 @@ export default function CheckoutScreen() {
   }, [quoting, address.city])
 
   return (
-    <ScrollView className="flex-1 bg-void p-4">
+    <ScrollView className="flex-1 bg-void" contentContainerClassName="p-4 pb-12">
       <Text className="text-2xl font-bold mb-2 text-ice">Checkout</Text>
       <Text className="text-xs text-mute mb-6">Demo payment via mock PayGate. No live card is charged.</Text>
 
@@ -233,11 +232,12 @@ export default function CheckoutScreen() {
         <View className="flex-row gap-2 mt-3">
           <TextInput
             editable={false}
-            className="flex-1 border border-ice/10 rounded-xl px-3 py-2 text-mute bg-navy"
+            className="flex-1 border border-ice/10 rounded-xl px-3 text-mute bg-navy"
+            style={{ minHeight: 44 }}
             placeholder="Not applied on mock PayGate"
             placeholderTextColor={colors.mute}
           />
-          <View className="bg-navy rounded-xl px-4 justify-center">
+          <View className="bg-navy rounded-xl px-4 justify-center" style={{ minHeight: 44 }}>
             <Text className="text-mute">Apply</Text>
           </View>
         </View>
@@ -246,17 +246,19 @@ export default function CheckoutScreen() {
       <View className="bg-panel rounded-2xl p-4 mb-4">
         <Text className="font-bold mb-3 text-ice">Shipping address</Text>
         <TextInput
-          className="border border-glow/20 rounded-xl px-3 py-2 mb-3 text-ice bg-navy"
+            className="border border-glow/20 rounded-xl px-3 mb-3 text-ice bg-navy"
+            style={{ minHeight: 44 }}
           placeholder="Street address"
-          placeholderTextColor={mmall.mute}
+          placeholderTextColor={colors.mute}
           value={address.street}
           onChangeText={(street) => setAddress({ ...address, street })}
           accessibilityLabel="Street address"
         />
         <TextInput
-          className="border border-glow/20 rounded-xl px-3 py-2 mb-3 text-ice bg-navy"
+            className="border border-glow/20 rounded-xl px-3 mb-3 text-ice bg-navy"
+            style={{ minHeight: 44 }}
           placeholder="City"
-          placeholderTextColor={mmall.mute}
+          placeholderTextColor={colors.mute}
           value={address.city}
           onChangeText={(city) => setAddress({ ...address, city })}
           accessibilityLabel="City"
@@ -266,7 +268,8 @@ export default function CheckoutScreen() {
             {cities.map((place) => (
               <Pressable
                 key={`${place.city}-${place.postalCode}`}
-                className="rounded-full bg-navy px-3 py-1 mr-2 mb-2"
+                className="rounded-full bg-navy px-3 mr-2 mb-2 items-center justify-center"
+                style={{ minHeight: 36 }}
                 onPress={() => {
                   setAddress((current) => ({
                     ...current,
@@ -283,17 +286,19 @@ export default function CheckoutScreen() {
           </View>
         ) : null}
         <TextInput
-          className="border border-glow/20 rounded-xl px-3 py-2 mb-3 text-ice bg-navy"
+            className="border border-glow/20 rounded-xl px-3 mb-3 text-ice bg-navy"
+            style={{ minHeight: 44 }}
           placeholder="Province"
-          placeholderTextColor={mmall.mute}
+          placeholderTextColor={colors.mute}
           value={address.state}
           onChangeText={(state) => setAddress({ ...address, state })}
           accessibilityLabel="Province"
         />
         <TextInput
-          className="border border-glow/20 rounded-xl px-3 py-2 text-ice bg-navy"
+          className="border border-glow/20 rounded-xl px-3 text-ice bg-navy"
+          style={{ minHeight: 44 }}
           placeholder="Postal code"
-          placeholderTextColor={mmall.mute}
+          placeholderTextColor={colors.mute}
           value={address.postalCode}
           onChangeText={(postalCode) => setAddress({ ...address, postalCode })}
           accessibilityLabel="Postal code"

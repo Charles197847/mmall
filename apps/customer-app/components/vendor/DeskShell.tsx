@@ -1,8 +1,10 @@
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import type { ReactNode } from 'react'
 import { router, usePathname } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useAuth } from '../../lib/auth/AuthProvider'
 import { ThemeToggle } from '../theme/ThemeToggle'
+import { layout } from '../../lib/layout'
 
 const links = [
   { href: '/(vendor)/dashboard', label: 'Overview', match: 'dashboard' },
@@ -26,19 +28,28 @@ export function DeskShell({
 }) {
   const path = usePathname() ?? ''
   const { user, logout } = useAuth()
+  const insets = useSafeAreaInsets()
 
   return (
-    <ScrollView className="flex-1 bg-void" contentContainerClassName="pb-16 pt-14 px-5">
+    <ScrollView
+      className="flex-1 bg-void"
+      contentContainerStyle={{ paddingBottom: 32, paddingTop: insets.top + 12, paddingHorizontal: layout.pageX }}
+    >
       <View className="flex-row items-center justify-between mb-4">
-        <View>
+        <View className="flex-1 pr-3">
           <Text className="text-xs text-mute">{kicker}</Text>
-          <Text className="text-ice mt-1" style={{ fontSize: 30, fontWeight: '300' }}>
+          <Text className="text-ice mt-1" style={{ fontSize: layout.title, lineHeight: layout.titleLine, fontWeight: '300' }}>
             {title}
           </Text>
         </View>
         <ThemeToggle />
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-6" contentContainerClassName="gap-2">
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        className="mb-5"
+        contentContainerStyle={{ gap: 8, paddingRight: 8 }}
+      >
         {links.map((item) => {
           const active =
             item.match === 'dashboard'
@@ -48,18 +59,23 @@ export function DeskShell({
             <Pressable
               key={item.href}
               onPress={() => router.push(item.href as never)}
-              className={`rounded-full px-3 py-1.5 ${active ? 'bg-brand' : 'bg-panel'}`}
+              className={`rounded-full px-3.5 ${active ? 'bg-brand' : 'bg-panel'}`}
+              style={{ minHeight: layout.chip, justifyContent: 'center' }}
             >
-              <Text className={`text-xs ${active ? 'text-white' : 'text-ice'}`}>{item.label}</Text>
+              <Text className={`text-sm ${active ? 'text-white' : 'text-ice'}`}>{item.label}</Text>
             </Pressable>
           )
         })}
       </ScrollView>
       {children}
-      <Pressable className="mt-10" onPress={() => router.push('/(customer)')}>
+      <Pressable className="mt-8" style={{ minHeight: layout.chip, justifyContent: 'center' }} onPress={() => router.push('/(customer)')}>
         <Text className="text-ice">Continue shopping</Text>
       </Pressable>
-      <Pressable className="mt-4" onPress={() => void logout().then(() => router.replace('/(auth)/vendor-login' as never))}>
+      <Pressable
+        className="mt-2"
+        style={{ minHeight: layout.chip, justifyContent: 'center' }}
+        onPress={() => void logout().then(() => router.replace('/(auth)/vendor-login' as never))}
+      >
         <Text className="text-mute">{user?.email ?? 'Sign out'}</Text>
       </Pressable>
     </ScrollView>

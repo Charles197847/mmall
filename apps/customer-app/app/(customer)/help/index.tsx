@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../../../lib/auth/AuthProvider'
 import { CourtNav } from '../../../components/mall/CourtNav'
 import { MallChrome } from '../../../components/mall/MallChrome'
+import { PageTitle } from '../../../components/mall/PageTitle'
 import { formatMoney } from '../../../lib/utils/format'
 import { useWalletStore } from '../../../stores/walletStore'
 import { palettes } from '../../../lib/theme'
@@ -40,21 +41,22 @@ export default function HelpScreen() {
       <MallChrome />
       <ScrollView contentContainerClassName="pb-12">
         <CourtNav />
-        <View className="px-5">
-          <Text className="text-mute text-sm">Desk</Text>
-          <Text className="text-ice mt-1" style={{ fontSize: 34, fontWeight: '300' }}>
-            Customer service
-          </Text>
-          <Text className="text-mute mt-2">Orders, returns, your account, gift cards, and vouchers — one desk for the mall.</Text>
+        <PageTitle
+          kicker="Desk"
+          title="Customer service"
+          lede="Orders, returns, your account, gift cards, and vouchers — one desk for the mall."
+        />
+        <View className="px-4">
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-5" contentContainerClassName="gap-2">
             {jumps.map((item) => (
               <Pressable
                 key={item.id}
                 onPress={() => setSection(item.id)}
-                className={`rounded-full border px-3 py-1.5 ${
+                className={`rounded-full border px-3.5 items-center justify-center ${
                   section === item.id ? 'bg-brand border-brand' : 'bg-panel border-ice/10'
                 }`}
+                style={{ minHeight: 40 }}
               >
                 <Text className={`text-xs ${section === item.id ? 'text-white' : 'text-ice'}`}>{item.label}</Text>
               </Pressable>

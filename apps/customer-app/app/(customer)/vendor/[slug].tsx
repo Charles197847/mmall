@@ -7,6 +7,7 @@ import { loadVendor } from '../../../lib/catalog'
 import { ProductCard } from '../../../components/product/ProductCard'
 import { useAreaStore } from '../../../stores/areaStore'
 import { MallChrome } from '../../../components/mall/MallChrome'
+import { PageTitle } from '../../../components/mall/PageTitle'
 import { palettes } from '../../../lib/theme'
 import { useThemeStore } from '../../../stores/themeStore'
 
@@ -33,16 +34,12 @@ export default function VendorStoreScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-void" contentContainerClassName="pb-12">
+    <View className="flex-1 bg-void">
       <MallChrome />
-      <View className="px-5">
-        <Text className="text-ice" style={{ fontSize: 34, lineHeight: 40, fontWeight: '300' }}>
-          {vendor.storeName}
-        </Text>
-        <Text className="text-mute text-sm mt-2">{here}</Text>
-        {vendor.description ? <Text className="text-mute mt-3 max-w-xl">{vendor.description}</Text> : null}
-      </View>
-      <View className="flex-row flex-wrap px-3.5 mt-8">
+      <ScrollView className="flex-1" contentContainerClassName="pb-12">
+      <PageTitle title={vendor.storeName} lede={here} />
+      {vendor.description ? <Text className="text-mute px-4 -mt-1">{vendor.description}</Text> : null}
+      <View className="flex-row flex-wrap px-2.5 mt-5">
         {items.map((product) => (
           <View key={product.id} className="w-1/2">
             <ProductCard product={product} showStore={false} />
@@ -50,5 +47,6 @@ export default function VendorStoreScreen() {
         ))}
       </View>
     </ScrollView>
+    </View>
   )
 }

@@ -38,7 +38,8 @@ export default function SavedScreen() {
         data={items}
         keyExtractor={(item) => item.id}
         numColumns={2}
-        contentContainerClassName="p-2"
+        contentContainerClassName="p-2 pb-8"
+        columnWrapperStyle={items.length ? { paddingHorizontal: 2 } : undefined}
         ListHeaderComponent={
           <View className="px-2 py-3">
             <Text className="text-2xl font-bold text-ice">Saved</Text>

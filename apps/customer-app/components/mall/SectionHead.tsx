@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Text, View } from 'react-native'
+import { layout } from '../../lib/layout'
 
 export function SectionHead({
   kicker,
@@ -11,10 +12,10 @@ export function SectionHead({
   action?: ReactNode
 }) {
   return (
-    <View className="px-5 mb-6 flex-row items-end justify-between">
+    <View className="px-4 mb-4 flex-row items-end justify-between">
       <View className="flex-1 pr-4">
-        <Text className="text-[12px] text-mute">{kicker}</Text>
-        <Text className="text-ice mt-1" style={{ fontSize: 34, lineHeight: 40, fontWeight: '300' }}>
+        <Text className="text-xs text-mute">{kicker}</Text>
+        <Text className="text-ice mt-0.5" style={{ fontSize: layout.title, lineHeight: layout.titleLine, fontWeight: '300' }}>
           {title}
         </Text>
       </View>
