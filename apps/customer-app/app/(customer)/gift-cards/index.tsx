@@ -54,7 +54,7 @@ export default function GiftCardsScreen() {
             Gift cards
           </Text>
           <Text className="text-mute mt-2">
-            Illustrated mall credit. Share a claim link — the PIN stays on this phone.
+            Demo mall credit stored on this phone. This is not a paid gift card and does not go through PayGate.
           </Text>
         </View>
 
@@ -95,11 +95,14 @@ export default function GiftCardsScreen() {
           className="mx-5 mt-4 rounded-full bg-brand py-3"
           onPress={() => {
             const card = issueGiftCard(value)
-            Alert.alert(`${tier.name} issued`, `Code ${card.code}\nKeep this PIN. Share uses a claim link, not the PIN.`)
+            Alert.alert(
+              `${tier.name} issued (demo)`,
+              `Local demo card ${card.code}\nNo PayGate payment was taken. This credit is preview-only until a paid ledger exists.`,
+            )
             setOpen(true)
           }}
         >
-          <Text className="text-white text-center font-semibold">Purchase {tier.name}</Text>
+          <Text className="text-white text-center font-semibold">Issue demo {tier.name}</Text>
         </Pressable>
 
         <View className="px-5 mt-10">
