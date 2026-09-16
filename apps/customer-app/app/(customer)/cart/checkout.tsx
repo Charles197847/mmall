@@ -10,7 +10,6 @@ import { useAuth } from '../../../lib/auth/AuthProvider'
 import { api } from '../../../lib/api'
 import { mmall } from '../../../lib/theme'
 import { useAreaStore } from '../../../stores/areaStore'
-import { useWalletStore, shopVouchers, voucherDiscount } from '../../../stores/walletStore'
 import { palettes } from '../../../lib/theme'
 import { useThemeStore } from '../../../stores/themeStore'
 import { persistShopperArea } from '../../../lib/location'
@@ -32,16 +31,10 @@ export default function CheckoutScreen() {
   const getTotal = useCartStore((s) => s.getTotal)
   const { token, user } = useAuth()
   const colors = palettes[useThemeStore((state) => state.mode)]
-  const savedVouchers = useWalletStore((state) => state.vouchers)
-  const peekGiftCard = useWalletStore((state) => state.peekGiftCard)
   const [loading, setLoading] = useState(false)
   const [quoting, setQuoting] = useState(false)
   const [quotes, setQuotes] = useState<ShippingQuote[]>([])
   const [service, setService] = useState<'ECO' | 'OVN' | 'SDD'>('ECO')
-  const [voucherCode, setVoucherCode] = useState('')
-  const [giftCode, setGiftCode] = useState('')
-  const [giftCredit, setGiftCredit] = useState(0)
-  const [giftNote, setGiftNote] = useState('')
   const [address, setAddress] = useState({
     street: '',
     city: '',
@@ -72,13 +65,8 @@ export default function CheckoutScreen() {
   const demoItems = items.filter((item) => isDemoSku(item.productId))
   const liveSubtotal = liveItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const subtotal = getTotal()
-  const voucherOff = voucherDiscount(voucherCode, liveSubtotal)
-  const afterVoucher = Math.max(0, liveSubtotal - voucherOff)
   const shipping = selected?.amount ?? 0
-  const giftCreditApplied = Math.min(giftCredit, afterVoucher + shipping)
-  const previewTotal = Math.max(0, afterVoucher + shipping - giftCreditApplied)
   const paygateTotal = liveSubtotal + shipping
-  const demoDiscount = Math.max(0, paygateTotal - previewTotal)
 
   useEffect(() => {
     if (!address.city || address.city.length < 3 || !items.length) return
@@ -164,8 +152,6 @@ export default function CheckoutScreen() {
       rememberPendingCheckout({
         orderId: response.id,
         payRequestId: response.payRequestId,
-        giftCode: giftCreditApplied && giftCode ? giftCode : undefined,
-        giftSpend: giftCreditApplied || undefined,
       })
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         window.location.href = checkoutUrl
@@ -229,89 +215,32 @@ export default function CheckoutScreen() {
             <Text className="text-ice">{formatMoney(subtotal - liveSubtotal)}</Text>
           </View>
         ) : null}
-        {voucherOff ? (
-          <View className="flex-row justify-between">
-            <Text className="text-mute">Demo voucher {voucherCode}</Text>
-            <Text className="text-ice">−{formatMoney(voucherOff)}</Text>
-          </View>
-        ) : null}
         <View className="flex-row justify-between">
           <Text className="text-mute">The Courier Guy</Text>
           <Text className="text-ice">{selected ? formatMoney(selected.amount) : '—'}</Text>
         </View>
-        {giftCreditApplied ? (
-          <View className="flex-row justify-between">
-            <Text className="text-mute">Demo gift card</Text>
-            <Text className="text-ice">−{formatMoney(giftCreditApplied)}</Text>
-          </View>
-        ) : null}
-        {demoDiscount ? (
-          <Text className="text-xs text-mute mt-2">
-            Demo gift/voucher previews do not change the mock PayGate total. PayGate will charge {formatMoney(paygateTotal)}.
-          </Text>
-        ) : null}
         <View className="mt-2 pt-2 flex-row justify-between">
           <Text className="font-bold text-ice">Mock PayGate total</Text>
           <Text className="font-bold text-lg text-glow">{formatMoney(paygateTotal)}</Text>
         </View>
       </View>
 
-      <View className="bg-panel rounded-2xl p-4 mb-4">
-        <Text className="font-bold mb-3 text-ice">Demo promotional voucher</Text>
-        {savedVouchers.length ? (
-          savedVouchers.map((code) => {
-            const voucher = shopVouchers.find((item) => item.code === code)
-            return (
-              <Pressable
-                key={code}
-                onPress={() => setVoucherCode(voucherCode === code ? '' : code)}
-                className={`rounded-xl px-3 py-3 mb-2 border ${
-                  voucherCode === code ? 'border-brand bg-navy' : 'border-ice/10'
-                }`}
-              >
-                <Text className="text-ice font-semibold">{code}</Text>
-                <Text className="text-mute text-xs mt-1">
-                  {voucher?.shop} · min {formatMoney(voucher?.minSpend ?? 0)}
-                </Text>
-              </Pressable>
-            )
-          })
-        ) : (
-          <Pressable onPress={() => router.push('/(customer)/vouchers')}>
-            <Text className="text-mute">Save a voucher first</Text>
-          </Pressable>
-        )}
-        <Text className="font-bold mt-4 mb-3 text-ice">Demo gift card</Text>
-        <View className="flex-row gap-2">
+      <View className="bg-panel rounded-2xl p-4 mb-4 opacity-50">
+        <Text className="font-bold mb-2 text-ice">Gift card and voucher</Text>
+        <Text className="text-xs text-mute">
+          Local mall credit is not applied on mock PayGate. The charged total is live items plus courier.
+        </Text>
+        <View className="flex-row gap-2 mt-3">
           <TextInput
-            className="flex-1 border border-ice/10 rounded-xl px-3 py-2 text-ice bg-navy"
-            placeholder="MM-••••-••••-••••-••••"
+            editable={false}
+            className="flex-1 border border-ice/10 rounded-xl px-3 py-2 text-mute bg-navy"
+            placeholder="Not applied on mock PayGate"
             placeholderTextColor={colors.mute}
-            autoCapitalize="characters"
-            value={giftCode}
-            onChangeText={(value) => {
-              setGiftCode(value)
-              setGiftCredit(0)
-              setGiftNote('')
-            }}
           />
-          <Pressable
-            className="bg-navy rounded-xl px-4 justify-center"
-            onPress={() => {
-              try {
-                const card = peekGiftCard(giftCode)
-                setGiftCredit(card.remaining)
-                setGiftNote(`${formatMoney(card.remaining)} available (demo preview — not deducted from PayGate)`)
-              } catch (error) {
-                setGiftCredit(0)
-                setGiftNote(error instanceof Error ? error.message : 'Invalid code')
-              }
-            }}
-          >
-            <Text className="text-ice">Apply</Text>
-          </Pressable>
+          <View className="bg-navy rounded-xl px-4 justify-center">
+            <Text className="text-mute">Apply</Text>
+          </View>
         </View>
-        {giftNote ? <Text className="text-xs text-mute mt-2">{giftNote}</Text> : null}
       </View>
 
       <View className="bg-panel rounded-2xl p-4 mb-4">

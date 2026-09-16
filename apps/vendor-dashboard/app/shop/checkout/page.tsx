@@ -10,7 +10,6 @@ import { readShopperArea } from '../../../lib/shopperLocation'
 import { useShopperArea } from '../../../lib/useShopperArea'
 import { useAuthStore } from '../../../stores/authStore'
 import { api } from '../../../lib/api'
-import { peekGiftCard, savedVoucherCodes, shopVouchers } from '../../../lib/mallWallet'
 import { isDemoSku, rememberPendingCheckout } from '../../../lib/pendingCheckout'
 
 export default function GuestCheckoutPage() {
@@ -26,9 +25,6 @@ export default function GuestCheckoutPage() {
   const [service, setService] = useState<'ECO' | 'OVN' | 'SDD'>('ECO')
   const [message, setMessage] = useState('')
   const [saving, setSaving] = useState(false)
-  const [giftCode, setGiftCode] = useState('')
-  const [giftCredit, setGiftCredit] = useState(0)
-  const [voucherCode, setVoucherCode] = useState('')
 
   useEffect(() => {
     setItems(readGuestBag())
@@ -76,20 +72,8 @@ export default function GuestCheckoutPage() {
   const demoItems = items.filter((item) => isDemoSku(item.productId))
   const liveSubtotal = liveItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const voucher = shopVouchers.find((item) => item.code === voucherCode)
-  const voucherOff = voucher
-    ? voucher.percent && liveSubtotal >= voucher.minSpend
-      ? Math.round((liveSubtotal * voucher.percent) / 100)
-      : voucher.amount && liveSubtotal >= voucher.minSpend
-        ? voucher.amount
-        : 0
-    : 0
-  const afterVoucher = Math.max(0, liveSubtotal - voucherOff)
   const shipping = selected?.amount ?? 0
-  const giftCreditApplied = Math.min(giftCredit, afterVoucher + shipping)
-  const previewTotal = Math.max(0, afterVoucher + shipping - giftCreditApplied)
   const paygateTotal = liveSubtotal + shipping
-  const demoDiscount = Math.max(0, paygateTotal - previewTotal)
   const cities = useMemo(() => searchSaPlaces(city, 6), [city])
 
   async function saveAddress() {
@@ -158,8 +142,6 @@ export default function GuestCheckoutPage() {
       rememberPendingCheckout({
         orderId: order.id,
         payRequestId: order.payRequestId,
-        giftCode: giftCreditApplied && giftCode ? giftCode : undefined,
-        giftSpend: giftCreditApplied || undefined,
       })
       window.location.href = checkoutUrl
     } catch (error) {
@@ -284,64 +266,27 @@ export default function GuestCheckoutPage() {
               <span>Courier</span>
               <span>{selected ? money(selected.amount) : '—'}</span>
             </p>
-            {voucherOff ? (
-              <p className="flex justify-between text-sm text-mute">
-                <span>Demo voucher {voucherCode}</span>
-                <span>−{money(voucherOff)}</span>
-              </p>
-            ) : null}
-            {giftCreditApplied ? (
-              <p className="flex justify-between text-sm text-mute">
-                <span>Demo gift card</span>
-                <span>−{money(giftCreditApplied)}</span>
-              </p>
-            ) : null}
-            {demoDiscount ? (
-              <p className="mt-2 text-xs text-mute">
-                Demo gift/voucher previews do not change the mock PayGate total. PayGate will charge {money(paygateTotal)}.
-              </p>
-            ) : null}
             <p className="mt-2 flex justify-between text-lg font-semibold">
               <span>Mock PayGate total</span>
               <span>{money(paygateTotal)}</span>
             </p>
-            <div className="mt-4 space-y-2">
-              <p className="text-sm font-semibold">Demo promotional voucher</p>
-              <select
-                value={voucherCode}
-                onChange={(event) => setVoucherCode(event.target.value)}
-                className="w-full rounded-lg bg-black/5 px-3 py-2 text-sm"
-              >
-                <option value="">None</option>
-                {savedVoucherCodes().map((code) => (
-                  <option key={code} value={code}>
-                    {code}
-                  </option>
-                ))}
+            <p className="mt-3 text-xs text-mute">
+              Local gift cards and promotional vouchers are not applied on mock PayGate. The amount above is what the
+              stand-in will charge (live items + courier).
+            </p>
+            <div className="mt-4 space-y-2 opacity-50">
+              <p className="text-sm font-semibold">Promotional voucher</p>
+              <select disabled className="w-full rounded-lg bg-black/5 px-3 py-2 text-sm" defaultValue="">
+                <option value="">Not applied on mock PayGate</option>
               </select>
-              <p className="text-sm font-semibold">Demo gift card</p>
+              <p className="text-sm font-semibold">Gift card</p>
               <div className="flex gap-2">
                 <input
-                  value={giftCode}
-                  onChange={(event) => setGiftCode(event.target.value.toUpperCase())}
-                  placeholder="MM-XXXX-XXXX-XXXX-XXXX"
+                  disabled
+                  placeholder="Not applied on mock PayGate"
                   className="flex-1 rounded-lg bg-black/5 px-3 py-2 font-mono text-sm"
                 />
-                <button
-                  type="button"
-                  className="text-sm font-semibold text-glow"
-                  onClick={() => {
-                    void peekGiftCard(giftCode)
-                      .then((card) => {
-                        const used = Math.min(card.remaining, afterVoucher + shipping)
-                        setGiftCredit(used)
-                        setMessage(
-                          `Demo preview: ${money(used)} from •••• ${card.last4}. This does not reduce the mock PayGate total.`,
-                        )
-                      })
-                      .catch((error) => setMessage(error instanceof Error ? error.message : 'Gift card failed.'))
-                  }}
-                >
+                <button type="button" disabled className="text-sm font-semibold text-mute">
                   Apply
                 </button>
               </div>

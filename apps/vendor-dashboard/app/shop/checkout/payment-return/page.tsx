@@ -7,7 +7,6 @@ import { GuestChrome, money } from '../../../../components/shop/GuestChrome'
 import { writeGuestBag } from '../../../../lib/guestBag'
 import { api } from '../../../../lib/api'
 import { useAuthStore } from '../../../../stores/authStore'
-import { redeemGiftCard } from '../../../../lib/mallWallet'
 import { clearPendingCheckout, readPendingCheckout } from '../../../../lib/pendingCheckout'
 import type { Order } from '@shopping-mall/shared-types'
 
@@ -18,7 +17,6 @@ function PaymentReturnBody() {
   const payRequestId = params.get('PAY_REQUEST_ID') ?? ''
   const approved = status === '1'
   const [order, setOrder] = useState<Order | null>(null)
-  const [note, setNote] = useState('')
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -30,11 +28,6 @@ function PaymentReturnBody() {
       return
     }
     writeGuestBag([])
-    if (pending?.giftCode && pending.giftSpend) {
-      void redeemGiftCard(pending.giftCode, pending.giftSpend)
-        .then(() => setNote('Demo gift credit was marked used locally after mock PayGate success. It did not change the charged total.'))
-        .catch(() => setNote('Mock payment succeeded. Demo gift credit could not be updated on this device.'))
-    }
     clearPendingCheckout()
   }, [approved, status])
 
@@ -45,9 +38,11 @@ function PaymentReturnBody() {
       : payRequestId
         ? api.orders.list().then((orders) => orders.find((row) => row.payRequestId === payRequestId) ?? null)
         : Promise.resolve(null)
-    void load.then((row) => {
-      if (row) setOrder(row)
-    }).catch(() => undefined)
+    void load
+      .then((row) => {
+        if (row) setOrder(row)
+      })
+      .catch(() => undefined)
   }, [token, payRequestId, pendingOrderId])
 
   return (
@@ -67,7 +62,6 @@ function PaymentReturnBody() {
       ) : approved && token ? (
         <p className="mt-4 text-sm text-mute">Loading the order created for this mock payment…</p>
       ) : null}
-      {note ? <p className="mt-3 text-sm text-mute">{note}</p> : null}
       <div className="mt-8 flex flex-wrap gap-4">
         <Link href={approved ? '/shop/help#orders' : '/shop/checkout'} className="rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white">
           {approved ? 'View orders' : 'Back to checkout'}
