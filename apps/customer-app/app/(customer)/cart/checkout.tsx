@@ -15,6 +15,7 @@ import { palettes } from '../../../lib/theme'
 import { useThemeStore } from '../../../stores/themeStore'
 import { persistShopperArea } from '../../../lib/location'
 import { formatMoney } from '../../../lib/utils/format'
+import { clearPendingCheckout, isDemoSku, rememberPendingCheckout } from '../../../lib/pendingCheckout'
 
 function readWebDeliverTo() {
   if (typeof window === 'undefined') return null
@@ -29,12 +30,10 @@ function readWebDeliverTo() {
 export default function CheckoutScreen() {
   const items = useCartStore((s) => s.items)
   const getTotal = useCartStore((s) => s.getTotal)
-  const clearCart = useCartStore((s) => s.clearCart)
   const { token, user } = useAuth()
   const colors = palettes[useThemeStore((state) => state.mode)]
   const savedVouchers = useWalletStore((state) => state.vouchers)
   const peekGiftCard = useWalletStore((state) => state.peekGiftCard)
-  const redeemGiftCard = useWalletStore((state) => state.redeemGiftCard)
   const [loading, setLoading] = useState(false)
   const [quoting, setQuoting] = useState(false)
   const [quotes, setQuotes] = useState<ShippingQuote[]>([])
@@ -69,12 +68,17 @@ export default function CheckoutScreen() {
   }, [user, hydrated])
 
   const selected = quotes.find((item) => item.serviceLevelCode === service && item.available) ?? quotes.find((item) => item.available)
+  const liveItems = items.filter((item) => !isDemoSku(item.productId))
+  const demoItems = items.filter((item) => isDemoSku(item.productId))
+  const liveSubtotal = liveItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const subtotal = getTotal()
-  const voucherOff = voucherDiscount(voucherCode, subtotal)
-  const afterVoucher = Math.max(0, subtotal - voucherOff)
+  const voucherOff = voucherDiscount(voucherCode, liveSubtotal)
+  const afterVoucher = Math.max(0, liveSubtotal - voucherOff)
   const shipping = selected?.amount ?? 0
   const giftCreditApplied = Math.min(giftCredit, afterVoucher + shipping)
-  const grandTotal = Math.max(0, afterVoucher + shipping - giftCreditApplied)
+  const previewTotal = Math.max(0, afterVoucher + shipping - giftCreditApplied)
+  const paygateTotal = liveSubtotal + shipping
+  const demoDiscount = Math.max(0, paygateTotal - previewTotal)
 
   useEffect(() => {
     if (!address.city || address.city.length < 3 || !items.length) return
@@ -87,14 +91,16 @@ export default function CheckoutScreen() {
       setQuotes(local)
       const first = local.find((item) => item.available)
       if (first) setService(first.serviceLevelCode)
-      if (items.every((item) => item.productId.startsWith('mock-'))) {
+      if (items.every((item) => isDemoSku(item.productId))) {
         setQuoting(false)
         return
       }
       setQuoting(true)
       api.shipping
         .quote({
-          items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+          items: items
+            .filter((item) => !isDemoSku(item.productId))
+            .map((item) => ({ productId: item.productId, quantity: item.quantity })),
           address: { city: address.city, postalCode: address.postalCode, street: address.street, state: address.state },
         })
         .then((result) => {
@@ -126,11 +132,8 @@ export default function CheckoutScreen() {
 
     setLoading(true)
     try {
-      if (grandTotal <= 0) {
-        if (giftCreditApplied && giftCode) redeemGiftCard(giftCode, giftCreditApplied)
-        clearCart()
-        Alert.alert('Paid with mall credit', 'This bag was covered by a gift card and voucher.')
-        router.replace('/(customer)/orders')
+      if (!liveItems.length) {
+        Alert.alert('Demo listings', 'Demo catalog items cannot be charged through PayGate. Add a live product to place a mock payment.')
         return
       }
       const shippingAddress = {
@@ -148,7 +151,7 @@ export default function CheckoutScreen() {
       const paymentReturnUrl = Linking.createURL('/cart/payment-return')
       const response = await api.orders.create(
         {
-          items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+          items: liveItems.map((item) => ({ productId: item.productId, quantity: item.quantity })),
           shippingAddress,
           billingAddress: shippingAddress,
           shippingServiceCode: selected.serviceLevelCode,
@@ -158,17 +161,18 @@ export default function CheckoutScreen() {
       )
       const checkoutUrl = response.paygate?.checkoutUrl
       if (!checkoutUrl) throw new Error('PayGate session was not created')
-      const spendGift = () => {
-        if (giftCreditApplied && giftCode) redeemGiftCard(giftCode, giftCreditApplied)
-      }
+      rememberPendingCheckout({
+        orderId: response.id,
+        payRequestId: response.payRequestId,
+        giftCode: giftCreditApplied && giftCode ? giftCode : undefined,
+        giftSpend: giftCreditApplied || undefined,
+      })
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
-        spendGift()
         window.location.href = checkoutUrl
         return
       }
       const result = await WebBrowser.openAuthSessionAsync(checkoutUrl, paymentReturnUrl)
       if (result.type === 'success' && result.url) {
-        spendGift()
         const parsed = Linking.parse(result.url)
         router.replace({
           pathname: '/(customer)/cart/payment-return',
@@ -176,10 +180,13 @@ export default function CheckoutScreen() {
         })
         return
       }
-      if (result.type === 'cancel') return
-      spendGift()
+      if (result.type === 'cancel') {
+        clearPendingCheckout()
+        return
+      }
       router.replace('/(customer)/cart/payment-return')
     } catch (error) {
+      clearPendingCheckout()
       Alert.alert('Checkout failed', error instanceof Error ? error.message : 'Something went wrong')
     } finally {
       setLoading(false)
@@ -195,7 +202,8 @@ export default function CheckoutScreen() {
 
   return (
     <ScrollView className="flex-1 bg-void p-4">
-      <Text className="text-2xl font-bold mb-6 text-ice">Checkout</Text>
+      <Text className="text-2xl font-bold mb-2 text-ice">Checkout</Text>
+      <Text className="text-xs text-mute mb-6">Demo payment via mock PayGate. No live card is charged.</Text>
 
       <View className="bg-panel rounded-2xl p-4 mb-4">
         <Text className="font-bold mb-3 text-ice">Order summary</Text>
@@ -203,6 +211,7 @@ export default function CheckoutScreen() {
           <View key={item.lineKey} className="flex-row justify-between py-1">
             <Text className="text-sm flex-1 text-mute">
               {item.quantity}x {item.name}
+              {isDemoSku(item.productId) ? ' · demo listing' : ''}
               {item.options && Object.keys(item.options).length
                 ? ` (${Object.values(item.options).join(', ')})`
                 : ''}
@@ -211,12 +220,18 @@ export default function CheckoutScreen() {
           </View>
         ))}
         <View className="mt-2 flex-row justify-between">
-          <Text className="text-mute">Subtotal</Text>
-          <Text className="text-ice">{formatMoney(subtotal)}</Text>
+          <Text className="text-mute">Live subtotal</Text>
+          <Text className="text-ice">{formatMoney(liveSubtotal)}</Text>
         </View>
+        {demoItems.length ? (
+          <View className="flex-row justify-between">
+            <Text className="text-mute">Demo listings (not charged)</Text>
+            <Text className="text-ice">{formatMoney(subtotal - liveSubtotal)}</Text>
+          </View>
+        ) : null}
         {voucherOff ? (
           <View className="flex-row justify-between">
-            <Text className="text-mute">Voucher {voucherCode}</Text>
+            <Text className="text-mute">Demo voucher {voucherCode}</Text>
             <Text className="text-ice">−{formatMoney(voucherOff)}</Text>
           </View>
         ) : null}
@@ -226,18 +241,23 @@ export default function CheckoutScreen() {
         </View>
         {giftCreditApplied ? (
           <View className="flex-row justify-between">
-            <Text className="text-mute">Gift card</Text>
+            <Text className="text-mute">Demo gift card</Text>
             <Text className="text-ice">−{formatMoney(giftCreditApplied)}</Text>
           </View>
         ) : null}
+        {demoDiscount ? (
+          <Text className="text-xs text-mute mt-2">
+            Demo gift/voucher previews do not change the mock PayGate total. PayGate will charge {formatMoney(paygateTotal)}.
+          </Text>
+        ) : null}
         <View className="mt-2 pt-2 flex-row justify-between">
-          <Text className="font-bold text-ice">PayGate total</Text>
-          <Text className="font-bold text-lg text-glow">{formatMoney(grandTotal)}</Text>
+          <Text className="font-bold text-ice">Mock PayGate total</Text>
+          <Text className="font-bold text-lg text-glow">{formatMoney(paygateTotal)}</Text>
         </View>
       </View>
 
       <View className="bg-panel rounded-2xl p-4 mb-4">
-        <Text className="font-bold mb-3 text-ice">Promotional voucher</Text>
+        <Text className="font-bold mb-3 text-ice">Demo promotional voucher</Text>
         {savedVouchers.length ? (
           savedVouchers.map((code) => {
             const voucher = shopVouchers.find((item) => item.code === code)
@@ -261,7 +281,7 @@ export default function CheckoutScreen() {
             <Text className="text-mute">Save a voucher first</Text>
           </Pressable>
         )}
-        <Text className="font-bold mt-4 mb-3 text-ice">Gift card</Text>
+        <Text className="font-bold mt-4 mb-3 text-ice">Demo gift card</Text>
         <View className="flex-row gap-2">
           <TextInput
             className="flex-1 border border-ice/10 rounded-xl px-3 py-2 text-ice bg-navy"
@@ -281,7 +301,7 @@ export default function CheckoutScreen() {
               try {
                 const card = peekGiftCard(giftCode)
                 setGiftCredit(card.remaining)
-                setGiftNote(`${formatMoney(card.remaining)} available`)
+                setGiftNote(`${formatMoney(card.remaining)} available (demo preview — not deducted from PayGate)`)
               } catch (error) {
                 setGiftCredit(0)
                 setGiftNote(error instanceof Error ? error.message : 'Invalid code')
@@ -378,9 +398,9 @@ export default function CheckoutScreen() {
       <TouchableOpacity
         className="bg-signal py-4 rounded-2xl"
         onPress={handlePlaceOrder}
-        disabled={loading || (Boolean(token) && !selected)}
+        disabled={loading || (Boolean(token) && (!selected || !liveItems.length))}
         accessibilityRole="button"
-        accessibilityLabel={`Pay with PayGate, ${grandTotal.toFixed(2)} rand`}
+        accessibilityLabel={`Demo payment with PayGate mock, ${paygateTotal.toFixed(2)} rand`}
       >
         {loading ? (
           <ActivityIndicator color="white" />
@@ -388,14 +408,14 @@ export default function CheckoutScreen() {
           <Text className="text-white text-center font-bold text-lg">
             {!token
               ? 'Save address and sign in'
-              : grandTotal > 0
-                ? `Pay with PayGate · ${formatMoney(grandTotal)}`
-                : 'Place order with mall credit'}
+              : liveItems.length
+                ? `Demo payment · PayGate mock · ${formatMoney(paygateTotal)}`
+                : 'Demo listings cannot be charged'}
           </Text>
         )}
       </TouchableOpacity>
       <Text className="text-xs text-mute text-center mt-4 mb-8">
-        Mock PayWeb checkout — Visa or Instant EFT. No live card is charged.
+        Mock PayWeb checkout — Visa or Instant EFT stand-in. No live card is charged. Stock is committed only after this demo payment succeeds.
       </Text>
     </ScrollView>
   )
