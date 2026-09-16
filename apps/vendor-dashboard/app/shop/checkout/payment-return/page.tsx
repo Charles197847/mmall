@@ -19,10 +19,12 @@ function PaymentReturnBody() {
   const approved = status === '1'
   const [order, setOrder] = useState<Order | null>(null)
   const [note, setNote] = useState('')
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!status) return
     const pending = readPendingCheckout()
+    if (pending?.orderId) setPendingOrderId(pending.orderId)
     if (!approved) {
       clearPendingCheckout()
       return
@@ -37,15 +39,16 @@ function PaymentReturnBody() {
   }, [approved, status])
 
   useEffect(() => {
-    if (!token || !payRequestId) return
-    void api.orders
-      .list()
-      .then((orders) => {
-        const match = orders.find((row) => row.payRequestId === payRequestId) ?? null
-        setOrder(match)
-      })
-      .catch(() => undefined)
-  }, [token, payRequestId])
+    if (!token) return
+    const load = pendingOrderId
+      ? api.orders.get(pendingOrderId)
+      : payRequestId
+        ? api.orders.list().then((orders) => orders.find((row) => row.payRequestId === payRequestId) ?? null)
+        : Promise.resolve(null)
+    void load.then((row) => {
+      if (row) setOrder(row)
+    }).catch(() => undefined)
+  }, [token, payRequestId, pendingOrderId])
 
   return (
     <>
