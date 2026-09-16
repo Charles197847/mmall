@@ -37,10 +37,10 @@ export default function GuestCheckoutPage() {
   useEffect(() => {
     const saved = user?.deliveryAddress
     const fromArea = area ?? shopperAreaFromAddress(saved) ?? readShopperArea()
-    setStreet(saved?.line1 ?? saved?.line2 ?? '')
-    setCity(fromArea?.city ?? saved?.city ?? '')
-    setProvince(fromArea?.province ?? saved?.state ?? '')
-    setPostalCode(fromArea?.postalCode ?? saved?.postalCode ?? '')
+    setStreet((current) => current || saved?.line1 || saved?.line2 || '')
+    setCity((current) => current || fromArea?.city || saved?.city || '')
+    setProvince((current) => current || fromArea?.province || saved?.state || '')
+    setPostalCode((current) => current || fromArea?.postalCode || saved?.postalCode || '')
   }, [area, user])
 
   useEffect(() => {
