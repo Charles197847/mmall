@@ -140,10 +140,6 @@ router.post(
               total: item.total,
             },
           })
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { inventory: { decrement: item.quantity } },
-          })
         }
 
         await tx.vendorOrder.create({
@@ -171,10 +167,6 @@ router.post(
 
     await queue.add('notification:order-confirmation', { orderId: order.id })
     await queue.add('notification:vendor-order', { orderId: order.id })
-    publishGrid({
-      type: 'inventory',
-      payload: { productIds: items.map((item) => item.productId), orderId: order.id },
-    })
     publishGrid({ type: 'order', payload: { orderId: order.id } })
     const paygate = await initiatePaygate(order.id, paymentReturnUrl)
 

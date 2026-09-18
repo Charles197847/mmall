@@ -2,9 +2,11 @@ import { randomInt, randomUUID } from 'node:crypto'
 import { prisma } from '../../shared/database/index.js'
 import { queue } from '../../shared/queue/index.js'
 import { HttpError } from '../../shared/middleware/error.js'
+import { commitPaidOrderStock } from '../orders/stock.js'
 import { PAYGATE_ENCRYPTION_KEY, PAYGATE_TEST_ID, paygateChecksum, verifyChecksum } from './checksum.js'
 
 const apiPublic = () => process.env.API_PUBLIC_URL ?? `http://localhost:${process.env.PORT ?? 4000}`
+/** Expo default. Next /shop must pass paymentReturnUrl on order create. */
 const shopperReturn = () => `${process.env.FRONTEND_URL ?? 'http://localhost:8081'}/cart/payment-return`
 const nativeReturns = new Map<string, string>()
 
@@ -101,10 +103,10 @@ export function mockCheckoutPage(payRequestId: string, amount: number, reference
 </head>
 <body style="margin:0;font-family:Segoe UI,Arial,sans-serif;background:#0b1b3a;color:#e8eefc;">
   <main style="max-width:420px;margin:40px auto;background:#122044;border-radius:20px;padding:28px;box-shadow:0 10px 40px rgba(0,0,0,.35);">
-    <p style="letter-spacing:.2em;font-size:11px;color:#8ba0c9;">PAYGATE PAYWEB 3 · MOCK</p>
-    <h1 style="margin:8px 0 4px;font-size:28px;">MMall checkout</h1>
+    <p style="letter-spacing:.2em;font-size:11px;color:#8ba0c9;">PAYGATE PAYWEB 3 · DEMO PAYMENT</p>
+    <h1 style="margin:8px 0 4px;font-size:28px;">MMall mock checkout</h1>
     <p style="color:#8ba0c9;margin:0 0 20px;">Reference ${reference.slice(0, 10)} · ZAR ${rand}</p>
-    <p style="font-size:13px;color:#c5d2ea;">This is a local PayGate stand-in. No live card is charged. Cards, Instant EFT, and Ozow will hit this same return/notify contract in production.</p>
+    <p style="font-size:13px;color:#c5d2ea;">This is a local PayGate stand-in. No live card is charged. Completing payment creates a real order and then commits inventory.</p>
     <form method="post" action="/paygate/mock/${payRequestId}/complete" style="display:grid;gap:10px;margin-top:22px;">
       <button name="result" value="approved" style="background:#2f6bff;color:#fff;border:0;border-radius:12px;padding:12px;font-weight:700;">Pay with Visa · R${rand}</button>
       <button name="result" value="eft" style="background:#0f766e;color:#fff;border:0;border-radius:12px;padding:12px;font-weight:700;">Pay with Instant EFT</button>
@@ -198,8 +200,8 @@ export async function applyPaygateNotify(body: Record<string, string>) {
   if (order.paymentStatus === 'PAID') return order
 
   const approved = body.TRANSACTION_STATUS === '1'
-  await prisma.order.update({
-    where: { id: order.id },
+  const moved = await prisma.order.updateMany({
+    where: { id: order.id, paymentStatus: { not: 'PAID' } },
     data: {
       paymentStatus: approved ? 'PAID' : 'FAILED',
       status: approved ? 'PROCESSING' : 'PENDING',
@@ -207,11 +209,13 @@ export async function applyPaygateNotify(body: Record<string, string>) {
       paymentMethod: body.PAY_METHOD_DETAIL || body.PAY_METHOD,
     },
   })
+  if (moved.count === 0) return order
   if (approved) {
     await prisma.vendorOrder.updateMany({
       where: { orderId: order.id },
       data: { status: 'PROCESSING' },
     })
+    await commitPaidOrderStock(order.id)
     await queue.add('notification:payment-confirmed', { orderId: order.id })
     await queue.add('order:fulfillment', { orderId: order.id })
   }

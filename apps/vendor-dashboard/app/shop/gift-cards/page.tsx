@@ -79,9 +79,10 @@ export default function GiftCardsPage() {
   return (
     <GuestChrome>
       <CourtNav />
-      <h1 className="text-3xl font-semibold">MMall gift cards</h1>
+        <h1 className="text-3xl font-semibold">MMall gift cards</h1>
       <p className="mt-2 max-w-3xl text-mute">
-        Each amount is its own voucher. Click a card to render it, then purchase. Spendable at any shop on the mall.
+        Demo mall credit stored in this browser. Issuing a card does not take payment and is not a paid MMall gift
+        product. Spend previews at checkout do not change the mock PayGate total.
       </p>
 
       <div className="mt-8 grid grid-cols-3 gap-5">
@@ -103,7 +104,7 @@ export default function GiftCardsPage() {
         <h2 className="text-lg font-semibold">Your wallet</h2>
         <p className="mt-1 text-sm text-mute">Balance {money(walletBalance())}</p>
         {cards.length === 0 ? (
-          <p className="mt-4 text-mute">No cards yet. Click a voucher above to render and buy it.</p>
+          <p className="mt-4 text-mute">No cards yet. Click a voucher above to render it, then issue a demo card.</p>
         ) : (
           <ul className="mt-4 grid grid-cols-3 gap-5">
             {cards.map((card) => {
@@ -173,7 +174,7 @@ export default function GiftCardsPage() {
                 {tier.name}
                 {issued
                   ? ` · PIN stored as a hash. After this session you will only see ••••${issued.last4}.`
-                  : ` · ${money(giftCardMin)} to ${money(giftCardMax)} · you pay ${money(value)}.`}
+                  : ` · ${money(giftCardMin)} to ${money(giftCardMax)} · demo issue ${money(value)}, no PayGate charge.`}
               </p>
               <div className="mt-4 flex items-center justify-end gap-4">
                 <button type="button" onClick={() => setOpen(false)} className="text-sm font-semibold text-mute">
@@ -193,7 +194,7 @@ export default function GiftCardsPage() {
                     onClick={() => void buy()}
                     className="rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white"
                   >
-                    Purchase {tier.name}
+                    Issue demo {tier.name}
                   </button>
                 )}
               </div>

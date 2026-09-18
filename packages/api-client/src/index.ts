@@ -210,6 +210,7 @@ export function createApiClient(options: ApiClientOptions) {
         shippingAddress: Record<string, unknown>
         billingAddress?: Record<string, unknown>
         shippingServiceCode?: 'ECO' | 'OVN' | 'SDD'
+        paymentReturnUrl?: string
       }) => request<Order>(options, '/orders', { method: 'POST', body: JSON.stringify(body) }),
       list: () => request<Order[]>(options, '/orders'),
       get: (id: string) => request<Order>(options, `/orders/${id}`),
