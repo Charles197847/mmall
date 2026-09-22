@@ -31,7 +31,12 @@ export function GuestChrome({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <DeliverTo />
+            <div className="flex items-center justify-between gap-3">
+              <DeliverTo />
+              <Link href="/shop/join" className="text-sm text-ice hover:text-glow sm:hidden">
+                Join
+              </Link>
+            </div>
             <div className="min-w-0 flex-1">
               <HeaderSearch />
             </div>

@@ -3,16 +3,17 @@
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '../stores/authStore'
 
-/** True only after zustand persist has rehydrated. First paint stays logged-out-shaped. */
+/**
+ * True after mount and after authStore persist rehydration.
+ * Mount gate keeps the server HTML from flashing a signed-in shell, and blocks replace('/login') until the stored token is loaded.
+ */
 export function useAuthHydrated() {
-  const [hydrated, setHydrated] = useState(false)
+  const hasHydrated = useAuthStore((state) => state.hasHydrated)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const finish = () => setHydrated(true)
-    const unsubscribe = useAuthStore.persist.onFinishHydration(finish)
-    if (useAuthStore.persist.hasHydrated()) finish()
-    return unsubscribe
+    setMounted(true)
   }, [])
 
-  return hydrated
+  return mounted && hasHydrated
 }
