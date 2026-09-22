@@ -1,6 +1,10 @@
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { FlatList, Text, TouchableOpacity, View } from 'react-native'
 import type { Product } from '@shopping-mall/shared-types'
 import { ProductCard } from './ProductCard'
+
+/** Rail card is 160px wide plus the `mr-3` gap. Used so the horizontal list windows instead of mounting every image. */
+const RAIL_STRIDE = 172
+const RAIL_PAD = 16
 
 export function ProductRail({
   title,
@@ -27,7 +31,7 @@ export function ProductRail({
           {subtitle ? <Text className="text-mute text-sm mt-0.5">{subtitle}</Text> : null}
         </View>
         {onSeeAll ? (
-          <TouchableOpacity onPress={onSeeAll} hitSlop={8}>
+          <TouchableOpacity onPress={onSeeAll} hitSlop={8} style={{ minHeight: 44, justifyContent: 'center' }}>
             <Text className="text-sm font-semibold text-glow">{seeAllLabel}</Text>
           </TouchableOpacity>
         ) : null}
@@ -36,17 +40,26 @@ export function ProductRail({
       {loading ? (
         <Text className="px-4 text-mute">Loading catalog…</Text>
       ) : (
-        <ScrollView
+        <FlatList
           horizontal
+          data={products}
+          keyExtractor={(product) => product.id}
+          renderItem={({ item }) => <ProductCard product={item} variant="rail" />}
           nestedScrollEnabled
           showsHorizontalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           style={{ flexGrow: 0 }}
-          contentContainerClassName="px-4 pb-1"
-        >
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} variant="rail" />
-          ))}
-        </ScrollView>
+          contentContainerStyle={{ paddingLeft: RAIL_PAD, paddingRight: RAIL_PAD, paddingBottom: 4 }}
+          initialNumToRender={4}
+          maxToRenderPerBatch={4}
+          windowSize={2}
+          removeClippedSubviews
+          getItemLayout={(_, index) => ({
+            length: RAIL_STRIDE,
+            offset: RAIL_PAD + RAIL_STRIDE * index,
+            index,
+          })}
+        />
       )}
     </View>
   )

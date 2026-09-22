@@ -1,6 +1,8 @@
-import { Image, ScrollView, Text, View } from 'react-native'
+import { useMemo } from 'react'
+import { FlatList, Image, Text, View } from 'react-native'
 import { useQuery } from '@tanstack/react-query'
 import { router } from 'expo-router'
+import type { Product } from '@shopping-mall/shared-types'
 import { useAuth } from '../../lib/auth/AuthProvider'
 import { MallChrome } from '../../components/mall/MallChrome'
 import { MallDirectory } from '../../components/mall/MallDirectory'
@@ -22,6 +24,10 @@ import { useThemeStore } from '../../stores/themeStore'
 import { useFilterStore } from '../../stores/filterStore'
 import { useAreaStore } from '../../stores/areaStore'
 
+type HomeRow =
+  | { id: string; type: 'rail'; title: string; category?: string; products: Product[] }
+  | { id: string; type: 'ad'; label: string }
+
 export default function HomeScreen() {
   const { user } = useAuth()
   const mode = useThemeStore((state) => state.mode)
@@ -41,17 +47,38 @@ export default function HomeScreen() {
   })
 
   const drop = mallSpecials()[0]
-  const shops = [...(stores.data?.length ? stores.data : mockVendors())].filter(
-    (shop, index, list) => list.findIndex((item) => item.slug === shop.slug) === index,
-  )
-  const featured = applyShopFilter(
-    [...(live.data?.items ?? []), ...mockFeatured()].slice(0, 18),
-    filter,
-    area,
-  )
-  const visibleCategories = filter.category
-    ? mallCategories.filter((item) => item.name === filter.category)
-    : mallCategories
+  const shops = useMemo(() => {
+    const source = stores.data?.length ? stores.data : mockVendors()
+    return source.filter((shop, index, list) => list.findIndex((item) => item.slug === shop.slug) === index)
+  }, [stores.data])
+
+  const rows = useMemo(() => {
+    const featured = applyShopFilter(
+      [...(live.data?.items ?? []), ...mockFeatured()].slice(0, 18),
+      filter,
+      area,
+    )
+    const categories = filter.category
+      ? mallCategories.filter((item) => item.name === filter.category)
+      : mallCategories
+    const next: HomeRow[] = []
+    if (featured.length) {
+      next.push({ id: 'featured', type: 'rail', title: 'Featured', products: featured })
+    }
+    categories.forEach((category, index) => {
+      next.push({
+        id: category.name,
+        type: 'rail',
+        title: category.name,
+        category: category.name,
+        products: applyShopFilter(mockProductsFor(category.name, 14), filter, area),
+      })
+      if ((index + 1) % 2 === 0) {
+        next.push({ id: `ad-${category.name}`, type: 'ad', label: `${category.name} promo` })
+      }
+    })
+    return next
+  }, [live.data?.items, filter, area])
 
   function openBrowse(category?: string) {
     if (category) setFilter({ category })
@@ -62,10 +89,9 @@ export default function HomeScreen() {
     )
   }
 
-  return (
-    <View className="flex-1" style={{ backgroundColor: paper }}>
-      <MallChrome />
-      <ScrollView nestedScrollEnabled contentContainerClassName="pb-8">
+  const header = useMemo(
+    () => (
+      <View>
         <View style={{ height: layout.heroBanner, overflow: 'hidden' }}>
           <Image
             source={require('../../assets/mmall-web-banner.png')}
@@ -95,21 +121,38 @@ export default function HomeScreen() {
 
         <StoreRail vendors={shops} loading={stores.isLoading} onSeeAll={() => router.push('/(customer)/stores')} />
         <FilterBar />
-        <ProductRail title="Featured" products={featured} onSeeAll={() => openBrowse()} />
+      </View>
+    ),
+    [user, drop, shops, stores.isLoading],
+  )
 
-        {visibleCategories.map((category, index) => (
-          <View key={category.name}>
+  return (
+    <View className="flex-1" style={{ backgroundColor: paper }}>
+      <MallChrome />
+      <FlatList
+        data={rows}
+        keyExtractor={(row) => row.id}
+        nestedScrollEnabled
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 32 }}
+        initialNumToRender={2}
+        maxToRenderPerBatch={2}
+        windowSize={3}
+        updateCellsBatchingPeriod={50}
+        ListHeaderComponent={header}
+        ListFooterComponent={MallFooter}
+        renderItem={({ item }) =>
+          item.type === 'ad' ? (
+            <AdBand label={item.label} />
+          ) : (
             <ProductRail
-              title={category.name}
-              products={applyShopFilter(mockProductsFor(category.name, 14), filter, area)}
-              onSeeAll={() => openBrowse(category.name)}
+              title={item.title}
+              products={item.products}
+              onSeeAll={() => openBrowse(item.category)}
             />
-            {(index + 1) % 2 === 0 ? <AdBand label={`${category.name} promo`} /> : null}
-          </View>
-        ))}
-
-        <MallFooter />
-      </ScrollView>
+          )
+        }
+      />
     </View>
   )
 }

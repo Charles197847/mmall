@@ -4,8 +4,10 @@ import { usePathname, router } from 'expo-router'
 import { mockAds } from '../../lib/catalog'
 
 const SKIP = ['/login', '/register', '/join', '/sell', '/vendor-login', '/legal', '/checkout', '/payment-return']
-const FIRST_MS = 8_000
-const EVERY_MS = 40_000
+const FIRST_MS = 20_000
+
+/** One sponsored modal per app session. Repeating every 40s covered checkout and browse. */
+let shownThisSession = false
 
 export function AdPopup() {
   const pathname = usePathname() ?? ''
@@ -15,21 +17,16 @@ export function AdPopup() {
   const openRef = useRef(false)
 
   useEffect(() => {
-    const show = () => {
-      if (openRef.current) return
+    if (shownThisSession || !ads.length) return
+    const startId = setTimeout(() => {
+      if (shownThisSession || openRef.current) return
+      if (SKIP.some((part) => (pathname ?? '').includes(part))) return
+      shownThisSession = true
       openRef.current = true
       setOpen(true)
-    }
-    const startId = setTimeout(() => {
-      show()
-      interval = setInterval(show, EVERY_MS)
     }, FIRST_MS)
-    let interval: ReturnType<typeof setInterval> | undefined
-    return () => {
-      clearTimeout(startId)
-      if (interval) clearInterval(interval)
-    }
-  }, [])
+    return () => clearTimeout(startId)
+  }, [pathname, ads.length])
 
   function close() {
     openRef.current = false

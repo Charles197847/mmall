@@ -1,5 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import * as Linking from 'expo-linking'
 import * as WebBrowser from 'expo-web-browser'
@@ -14,6 +26,31 @@ import { useAreaStore } from '../../../stores/areaStore'
 import { persistShopperArea } from '../../../lib/location'
 import { formatMoney } from '../../../lib/utils/format'
 import { clearPendingCheckout, isDemoSku, rememberPendingCheckout } from '../../../lib/pendingCheckout'
+
+function keepFieldVisible(event: { target?: unknown }) {
+  if (Platform.OS !== 'web') return
+  const node = event.target as { scrollIntoView?: (options: ScrollIntoViewOptions) => void } | null
+  requestAnimationFrame(() => node?.scrollIntoView?.({ block: 'center', inline: 'nearest' }))
+}
+
+function useWebKeyboardInset() {
+  const [inset, setInset] = useState(0)
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined' || !window.visualViewport) return
+    const viewport = window.visualViewport
+    const update = () => {
+      setInset(Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop))
+    }
+    update()
+    viewport.addEventListener('resize', update)
+    viewport.addEventListener('scroll', update)
+    return () => {
+      viewport.removeEventListener('resize', update)
+      viewport.removeEventListener('scroll', update)
+    }
+  }, [])
+  return inset
+}
 
 function readWebDeliverTo() {
   if (typeof window === 'undefined') return null
@@ -30,6 +67,8 @@ export default function CheckoutScreen() {
   const getTotal = useCartStore((s) => s.getTotal)
   const { token, user } = useAuth()
   const colors = palettes[useThemeStore((state) => state.mode)]
+  const insets = useSafeAreaInsets()
+  const webKeyboard = useWebKeyboardInset()
   const [loading, setLoading] = useState(false)
   const [quoting, setQuoting] = useState(false)
   const [quotes, setQuotes] = useState<ShippingQuote[]>([])
@@ -186,7 +225,17 @@ export default function CheckoutScreen() {
   }, [quoting, address.city])
 
   return (
-    <ScrollView className="flex-1 bg-void" contentContainerClassName="p-4 pb-12">
+    <KeyboardAvoidingView
+      className="flex-1 bg-void"
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={0}
+      style={{ paddingBottom: webKeyboard }}
+    >
+    <ScrollView
+      className="flex-1"
+      keyboardShouldPersistTaps="handled"
+      contentContainerClassName="p-4 pb-4"
+    >
       <Text className="text-2xl font-bold mb-2 text-ice">Checkout</Text>
       <Text className="text-xs text-mute mb-6">Demo payment via mock PayGate. No live card is charged.</Text>
 
@@ -252,6 +301,7 @@ export default function CheckoutScreen() {
           placeholderTextColor={colors.mute}
           value={address.street}
           onChangeText={(street) => setAddress({ ...address, street })}
+          onFocus={keepFieldVisible}
           accessibilityLabel="Street address"
         />
         <TextInput
@@ -261,6 +311,7 @@ export default function CheckoutScreen() {
           placeholderTextColor={colors.mute}
           value={address.city}
           onChangeText={(city) => setAddress({ ...address, city })}
+          onFocus={keepFieldVisible}
           accessibilityLabel="City"
         />
         {cities.length ? (
@@ -292,6 +343,7 @@ export default function CheckoutScreen() {
           placeholderTextColor={colors.mute}
           value={address.state}
           onChangeText={(state) => setAddress({ ...address, state })}
+          onFocus={keepFieldVisible}
           accessibilityLabel="Province"
         />
         <TextInput
@@ -301,6 +353,7 @@ export default function CheckoutScreen() {
           placeholderTextColor={colors.mute}
           value={address.postalCode}
           onChangeText={(postalCode) => setAddress({ ...address, postalCode })}
+          onFocus={keepFieldVisible}
           accessibilityLabel="Postal code"
         />
       </View>
@@ -329,6 +382,15 @@ export default function CheckoutScreen() {
         ))}
       </View>
 
+    </ScrollView>
+    <View
+      className="bg-void px-4 pt-3"
+      style={{
+        paddingBottom: Math.max(insets.bottom, 12),
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(232,238,252,0.12)',
+      }}
+    >
       <TouchableOpacity
         className="bg-signal py-4 rounded-2xl"
         onPress={handlePlaceOrder}
@@ -348,9 +410,10 @@ export default function CheckoutScreen() {
           </Text>
         )}
       </TouchableOpacity>
-      <Text className="text-xs text-mute text-center mt-4 mb-8">
+      <Text className="text-xs text-mute text-center mt-2">
         Mock PayWeb checkout — Visa or Instant EFT stand-in. No live card is charged. Stock is committed only after this demo payment succeeds.
       </Text>
-    </ScrollView>
+    </View>
+    </KeyboardAvoidingView>
   )
 }
