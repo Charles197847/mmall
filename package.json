@@ -15,7 +15,8 @@
     "db:migrate": "pnpm --filter backend db:migrate",
     "db:seed": "pnpm --filter backend db:seed",
     "db:studio": "pnpm --filter backend db:studio",
-    "eas-build-pre-install": "node apps/customer-app/scripts/eas-slim-workspace.cjs"
+    "eas-build-pre-install": "node apps/customer-app/scripts/eas-slim-workspace.cjs",
+    "check:brand-assets": "node scripts/check-brand-assets.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
