@@ -35,9 +35,9 @@ export function HeaderActions() {
   }, [])
 
   return (
-    <div className="flex items-center gap-5">
+    <div className="flex items-center gap-2 sm:gap-5">
       <Link href="/shop/saved" className="relative p-1 text-ice hover:text-glow" aria-label={`Loved items, ${loved}`}>
-        <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <svg viewBox="0 0 24 24" className="h-6 w-6 sm:h-8 sm:w-8" fill="none" stroke="currentColor" strokeWidth="1.7">
           <path
             d="M12 20s-7-4.4-7-9.2C5 8 6.8 6.4 9 6.4c1.3 0 2.4.7 3 1.7.6-1 1.7-1.7 3-1.7 2.2 0 4 1.6 4 4.4 0 4.8-7 9.2-7 9.2Z"
             strokeLinejoin="round"
@@ -46,7 +46,7 @@ export function HeaderActions() {
         <Badge count={loved} />
       </Link>
       <Link href="/shop/bag" className="relative p-1 text-ice hover:text-glow" aria-label={`Basket, ${bag} items`}>
-        <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <svg viewBox="0 0 24 24" className="h-6 w-6 sm:h-8 sm:w-8" fill="none" stroke="currentColor" strokeWidth="1.7">
           <circle cx="9" cy="20" r="1.4" />
           <circle cx="18" cy="20" r="1.4" />
           <path d="M3 4h2l2.2 11h11.3l1.8-7H7" strokeLinecap="round" strokeLinejoin="round" />

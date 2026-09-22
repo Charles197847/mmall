@@ -65,9 +65,9 @@ export default function SellPage() {
         </Link>
       </p>
 
-      <div className="mt-8 grid grid-cols-2 gap-10">
+      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10">
         <section>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {reasons.map((item) => (
               <article key={item.title} className="rounded-xl bg-black/5 p-4">
                 <h2 className="font-semibold">{item.title}</h2>
@@ -103,7 +103,7 @@ export default function SellPage() {
                 otpCode,
               })
               setSession(result.token, result.user)
-              router.replace('/')
+              router.replace('/products')
             } catch (err) {
               setError(err instanceof Error ? err.message : 'Sign-up failed')
             } finally {

@@ -70,8 +70,8 @@ export default function VendorsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
+      <div className="overflow-x-auto rounded-lg bg-white shadow">
+        <table className="min-w-[48rem] w-full">
           <thead className="bg-gray-50">
             <tr>
               <th className="text-left p-3 text-sm font-medium text-gray-500">Store</th>

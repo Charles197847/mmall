@@ -46,7 +46,11 @@ export function OrderList({ orders, onUpdateStatus, onBookCourier, onAdvanceShip
     }
   }
 
-  if (!orders?.length) {
+  if (orders == null) {
+    return <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">Loading orders…</div>
+  }
+
+  if (orders.length === 0) {
     return <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">No orders yet.</div>
   }
 

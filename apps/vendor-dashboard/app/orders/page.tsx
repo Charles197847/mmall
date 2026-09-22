@@ -8,7 +8,11 @@ import { OrderList } from '../../components/orders/OrderList'
 export default function OrdersPage() {
   const queryClient = useQueryClient()
   const [busyId, setBusyId] = useState<string | null>(null)
-  const { data: orders } = useQuery({
+  const {
+    data: orders,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['vendor-orders'],
     queryFn: () => api.vendors.orders.list(),
   })
@@ -27,29 +31,38 @@ export default function OrdersPage() {
     <div>
       <h1 className="text-2xl font-bold mb-2">Orders</h1>
       <p className="text-mute text-sm mb-6">After PayGate pays, book The Courier Guy from the Sandton hub and walk the mock tracking hops.</p>
-      <OrderList
-        orders={orders}
-        busyId={busyId}
-        onUpdateStatus={updateStatus}
-        onBookCourier={async (vendorOrderId) => {
-          setBusyId(vendorOrderId)
-          try {
-            await api.vendors.orders.bookCourier(vendorOrderId, { serviceLevelCode: 'ECO' })
-            await invalidate()
-          } finally {
-            setBusyId(null)
-          }
-        }}
-        onAdvanceShipment={async (shipmentId) => {
-          setBusyId(shipmentId)
-          try {
-            await api.shipping.advance(shipmentId)
-            await invalidate()
-          } finally {
-            setBusyId(null)
-          }
-        }}
-      />
+      {isError && orders == null ? (
+        <div className="rounded-lg bg-white p-8 text-center shadow">
+          <p className="text-gray-500">Could not load orders.</p>
+          <button type="button" className="mt-3 text-sm text-brand" onClick={() => void refetch()}>
+            Try again
+          </button>
+        </div>
+      ) : (
+        <OrderList
+          orders={orders}
+          busyId={busyId}
+          onUpdateStatus={updateStatus}
+          onBookCourier={async (vendorOrderId) => {
+            setBusyId(vendorOrderId)
+            try {
+              await api.vendors.orders.bookCourier(vendorOrderId, { serviceLevelCode: 'ECO' })
+              await invalidate()
+            } finally {
+              setBusyId(null)
+            }
+          }}
+          onAdvanceShipment={async (shipmentId) => {
+            setBusyId(shipmentId)
+            try {
+              await api.shipping.advance(shipmentId)
+              await invalidate()
+            } finally {
+              setBusyId(null)
+            }
+          }}
+        />
+      )}
     </div>
   )
 }

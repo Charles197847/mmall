@@ -5,13 +5,15 @@ import type { Product } from '@shopping-mall/shared-types'
 import { money } from './GuestChrome'
 import { LoveButton } from './LoveButton'
 
+export const shopProductGridClass = 'grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4'
+
 export function ProductGrid({ products }: { products: Product[] }) {
   if (!products.length) {
     return <p className="text-mute">Nothing here right now.</p>
   }
 
   return (
-    <div className="grid grid-cols-4 gap-5">
+    <div className={shopProductGridClass}>
       {products.map((product) => (
         <Link key={product.id} href={`/shop/product/${product.id}`} className="mm-listing relative">
           <div className="relative">

@@ -51,7 +51,7 @@ export function GuestFooter() {
       >
         Back to top
       </a>
-      <div className="mx-auto grid w-[94%] grid-cols-4 gap-10 py-12">
+      <div className="mx-auto grid w-[94%] grid-cols-2 gap-8 py-10 sm:gap-10 lg:grid-cols-4">
         {columns.map((column) => (
           <div key={column.title}>
             <p className="text-sm font-semibold">{column.title}</p>

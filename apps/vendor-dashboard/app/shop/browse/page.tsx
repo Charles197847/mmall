@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Suspense } from 'react'
 import { api } from '../../../lib/api'
 import { GuestChrome, money } from '../../../components/shop/GuestChrome'
+import { shopProductGridClass } from '../../../components/shop/ProductGrid'
 import { mockProductsFor } from '../../../lib/mockCatalog'
 import { useShopperArea } from '../../../lib/useShopperArea'
 import { LoveButton } from '../../../components/shop/LoveButton'
@@ -38,7 +39,7 @@ function BrowseGrid() {
       <h1 className="mb-4 text-3xl font-semibold">{q ? `Results for “${q}”` : category ?? 'Browse'}</h1>
       <FilterBar />
       {products.isLoading ? <p className="text-mute">Loading…</p> : null}
-      <div className="grid grid-cols-4 gap-5">
+      <div className={shopProductGridClass}>
         {items.map((product) => (
           <Link
             key={product.id}

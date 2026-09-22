@@ -188,8 +188,8 @@ export default function AdvertisePage() {
         {message ? <p className="text-sm text-slate-600">{message}</p> : null}
       </section>
 
-      <section className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full text-sm">
+      <section className="overflow-x-auto rounded-lg bg-white shadow">
+        <table className="min-w-[40rem] w-full text-sm">
           <thead className="bg-slate-50 text-left text-slate-500">
             <tr>
               <th className="p-3">Campaign</th>

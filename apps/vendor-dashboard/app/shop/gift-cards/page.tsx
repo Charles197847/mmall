@@ -85,7 +85,7 @@ export default function GiftCardsPage() {
         product. Spend previews at checkout do not change the mock PayGate total.
       </p>
 
-      <div className="mt-8 grid grid-cols-3 gap-5">
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {giftCardPresets.map((preset) => (
           <button key={preset} type="button" onClick={() => pick(preset)} className="text-left">
             <GiftCardFace amount={preset} badge={giftTierFor(preset).name} />
@@ -106,7 +106,7 @@ export default function GiftCardsPage() {
         {cards.length === 0 ? (
           <p className="mt-4 text-mute">No cards yet. Click a voucher above to render it, then issue a demo card.</p>
         ) : (
-          <ul className="mt-4 grid grid-cols-3 gap-5">
+          <ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {cards.map((card) => {
               const customCard = !giftCardPresets.includes(card.amount as (typeof giftCardPresets)[number])
               return (

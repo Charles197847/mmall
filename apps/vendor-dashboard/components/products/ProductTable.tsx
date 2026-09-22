@@ -10,7 +10,8 @@ export function ProductTable({
   onDelete: (id: string) => void
 }) {
   return (
-    <table className="w-full bg-white rounded-lg shadow">
+    <div className="overflow-x-auto">
+    <table className="min-w-[40rem] w-full bg-white rounded-lg shadow">
       <thead>
         <tr className="border-b text-left">
           <th className="p-3">Product</th>
@@ -51,5 +52,6 @@ export function ProductTable({
         ))}
       </tbody>
     </table>
+    </div>
   )
 }
