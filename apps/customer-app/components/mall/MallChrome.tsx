@@ -113,7 +113,7 @@ export function MallChrome({ showSearch = true }: { showSearch?: boolean }) {
             </View>
             <View
               className="flex-1 flex-row items-center rounded-full bg-void px-3"
-              style={{ minHeight: layout.chip }}
+              style={{ minHeight: layout.chip, minWidth: 0 }}
             >
               <Feather name="search" size={16} color={colors.mute} />
               <TextInput
@@ -122,7 +122,7 @@ export function MallChrome({ showSearch = true }: { showSearch?: boolean }) {
                 placeholder="Search the mall"
                 placeholderTextColor={colors.mute}
                 className="flex-1 text-ice ml-2 py-0"
-                style={{ fontSize: 16, fontWeight: '400' }}
+                style={{ fontSize: 16, fontWeight: '400', minWidth: 0, flex: 1 }}
                 returnKeyType="search"
                 onSubmitEditing={search}
               />
