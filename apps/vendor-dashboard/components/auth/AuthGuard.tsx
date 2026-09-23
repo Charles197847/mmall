@@ -3,6 +3,7 @@
 import { useEffect, type PropsWithChildren } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '../../stores/authStore'
+import { useAuthHydrated } from '../../hooks/useAuthHydrated'
 import { isPublicPath } from '../../lib/publicPaths'
 
 export function AuthGuard({
@@ -10,11 +11,12 @@ export function AuthGuard({
   requiredRole,
 }: PropsWithChildren<{ requiredRole?: 'VENDOR' | 'ADMIN' }>) {
   const { user, token } = useAuthStore()
+  const hydrated = useAuthHydrated()
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
-    if (isPublicPath(pathname)) return
+    if (!hydrated || isPublicPath(pathname)) return
     if (!token || !user) {
       router.replace('/login')
       return
@@ -22,9 +24,9 @@ export function AuthGuard({
     if (requiredRole && user.role !== requiredRole && user.role !== 'ADMIN') {
       router.replace(user.role === 'CUSTOMER' ? '/shop' : '/login')
     }
-  }, [token, user, requiredRole, router, pathname])
+  }, [hydrated, token, user, requiredRole, router, pathname])
 
   if (isPublicPath(pathname)) return children
-  if (!token || !user) return <div className="p-8 text-mute">Checking session...</div>
+  if (!hydrated || !token || !user) return <div className="p-8 text-mute">Checking session...</div>
   return children
 }

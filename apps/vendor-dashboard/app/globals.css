@@ -1,5 +1,14 @@
 @import '../../../packages/config/css/mmall.css';
 
+@media (max-width: 639px) {
+  .mm-shop header .mm-wordmark {
+    height: 1.5rem;
+    max-width: 6.5rem;
+    object-fit: contain;
+    object-position: left center;
+  }
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

@@ -62,7 +62,8 @@ export default function FeesPage() {
 
       <section className="bg-white rounded-lg shadow p-6">
         <h2 className="font-semibold mb-4">Category commissions</h2>
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="min-w-[32rem] w-full text-sm">
           <thead>
             <tr className="text-left text-slate-500 border-b">
               <th className="pb-2">Category</th>
@@ -80,6 +81,7 @@ export default function FeesPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
 
       <section className="bg-white rounded-lg shadow p-6 space-y-2">

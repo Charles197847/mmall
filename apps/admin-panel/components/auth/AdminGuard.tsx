@@ -3,22 +3,24 @@
 import { useEffect, type PropsWithChildren } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '../../stores/authStore'
+import { useAuthHydrated } from '../../hooks/useAuthHydrated'
 
 export function AdminGuard({ children }: PropsWithChildren) {
   const { user, token } = useAuthStore()
+  const hydrated = useAuthHydrated()
   const router = useRouter()
   const pathname = usePathname()
   const isLogin = pathname === '/login'
   const authorized = Boolean(token && user?.role === 'ADMIN')
 
   useEffect(() => {
-    if (isLogin) return
+    if (!hydrated || isLogin) return
     if (!authorized) router.replace('/login')
-  }, [authorized, isLogin, router])
+  }, [hydrated, authorized, isLogin, router])
 
   if (isLogin) return children
 
-  if (!authorized) {
+  if (!hydrated || !authorized) {
     return (
       <div className="flex h-screen items-center justify-center bg-void">
         <div className="text-center">

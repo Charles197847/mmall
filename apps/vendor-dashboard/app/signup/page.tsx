@@ -42,7 +42,7 @@ export default function SignupPage() {
 
   function finish(result: { token: string; user: { role: string } }) {
     setSession(result.token, result.user as never)
-    router.replace('/')
+    router.replace('/products')
   }
 
   return (

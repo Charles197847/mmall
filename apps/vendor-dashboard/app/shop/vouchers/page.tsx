@@ -27,7 +27,7 @@ export default function VouchersPage() {
       <CourtNav />
       <h1 className="text-3xl font-semibold">Promotional vouchers</h1>
       <p className="mt-2 text-mute">Click a card to render it. Save it, then apply the code at checkout.</p>
-      <div className="mt-8 grid grid-cols-3 gap-6">
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {shopVouchers.map((voucher) => (
           <button key={voucher.code} type="button" className="text-left" onClick={() => setSelected(voucher)}>
             <MallCardFace

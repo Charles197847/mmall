@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import { api } from '../../../../lib/api'
 import { GuestChrome, money } from '../../../../components/shop/GuestChrome'
+import { shopProductGridClass } from '../../../../components/shop/ProductGrid'
 import { mallCategories } from '../../../../lib/mallCategories'
 import { findMockVendor, mockProductsFor } from '../../../../lib/mockCatalog'
 import { proximityLabel } from '@shopping-mall/shared-types'
@@ -38,7 +39,7 @@ export default function GuestStorePage() {
         {proximityLabel(area, shop?.city, shop?.lat, shop?.lng) ?? shop?.city ?? 'South Africa'}
       </p>
       <p className="mt-2 max-w-2xl text-mute">{shop?.description}</p>
-      <div className="mt-8 grid grid-cols-4 gap-5">
+      <div className={`mt-8 ${shopProductGridClass}`}>
         {items.map((product) => (
           <Link
             key={product.id}

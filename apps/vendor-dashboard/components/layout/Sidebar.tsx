@@ -15,18 +15,37 @@ const links = [
   { href: '/verify', label: 'Verify account' },
 ]
 
-export function Sidebar({ storeName }: { storeName?: string }) {
+export function Sidebar({
+  storeName,
+  open,
+  onNavigate,
+}: {
+  storeName?: string
+  open: boolean
+  onNavigate: () => void
+}) {
   const pathname = usePathname()
   return (
-    <aside className="relative w-64 text-ice p-5">
+    <aside
+      id="desk-nav"
+      className={`relative w-64 shrink-0 bg-void p-5 text-ice lg:bg-transparent ${
+        open ? 'fixed inset-y-0 left-0 z-40 block overflow-y-auto' : 'hidden'
+      } lg:static lg:z-auto lg:block`}
+    >
       <span className="pointer-events-none absolute top-10 bottom-10 right-0 w-px bg-gradient-to-b from-transparent via-glow/50 to-transparent" />
-      <BrandLockup subtitle="VENDOR NODE" />
-      <p className="text-sm text-mute mb-4 truncate">{storeName || 'Your store'}</p>
+      <div className="mb-4 flex items-start justify-between gap-3 lg:block">
+        <BrandLockup subtitle="VENDOR NODE" />
+        <button type="button" className="text-sm text-mute lg:hidden" onClick={onNavigate}>
+          Close
+        </button>
+      </div>
+      <p className="mb-4 truncate text-sm text-mute">{storeName || 'Your store'}</p>
       <nav className="space-y-1">
         {links.map((link) => (
           <Link
             key={link.href}
             href={link.href}
+            onClick={onNavigate}
             className={`block rounded-xl px-3 py-2 text-sm ${
               pathname === link.href ? 'bg-brand text-white shadow-glow' : 'text-mute hover:bg-panel hover:text-ice'
             }`}

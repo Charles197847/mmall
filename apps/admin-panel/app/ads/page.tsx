@@ -35,8 +35,8 @@ export default function AdminAdsPage() {
           ))}
         </div>
       </div>
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto rounded-lg bg-white shadow">
+        <table className="min-w-[40rem] w-full text-sm">
           <thead className="bg-slate-50 text-left text-slate-500">
             <tr>
               <th className="p-3">Vendor</th>

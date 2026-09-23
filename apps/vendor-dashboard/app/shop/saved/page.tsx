@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { GuestChrome, money } from '../../../components/shop/GuestChrome'
+import { shopProductGridClass } from '../../../components/shop/ProductGrid'
 import { readGuestLove, writeGuestLove, type GuestLoveItem } from '../../../lib/guestLove'
 import { LoveButton } from '../../../components/shop/LoveButton'
 
@@ -27,7 +28,7 @@ export default function GuestSavedPage() {
           </Link>
         </p>
       ) : (
-        <div className="mt-8 grid grid-cols-4 gap-5">
+        <div className={`mt-8 ${shopProductGridClass}`}>
           {items.map((item) => (
             <div key={item.productId} className="mm-listing relative">
               <Link href={`/shop/product/${item.productId}`}>
