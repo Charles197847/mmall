@@ -13,8 +13,8 @@ import type { User } from '@shopping-mall/shared-types'
 export default function LoginScreen() {
   const { login, persist, consumeMagic } = useAuth()
   const params = useLocalSearchParams<{ magic?: string; next?: string }>()
-  const [email, setEmail] = useState('customer@shopping-mall.local')
-  const [password, setPassword] = useState('Password123!')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const mode = useThemeStore((state) => state.mode)

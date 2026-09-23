@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { router } from 'expo-router'
 import { useAuth } from '../../../lib/auth/AuthProvider'
 import { api } from '../../../lib/api'
-import { mmall } from '../../../lib/theme'
+import { palettes } from '../../../lib/theme'
+import { useThemeStore } from '../../../stores/themeStore'
 
 function statusStyle(status: string) {
   switch (status) {
@@ -24,6 +25,7 @@ function statusStyle(status: string) {
 
 export default function OrdersScreen() {
   const { token } = useAuth()
+  const colors = palettes[useThemeStore((state) => state.mode)]
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['orders'],
@@ -46,7 +48,7 @@ export default function OrdersScreen() {
   if (isLoading) {
     return (
       <View className="flex-1 justify-center items-center bg-void">
-        <ActivityIndicator size="large" color={mmall.glow} />
+        <ActivityIndicator size="large" color={colors.glow} />
       </View>
     )
   }

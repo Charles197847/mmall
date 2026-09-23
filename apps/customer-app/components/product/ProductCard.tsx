@@ -5,10 +5,11 @@ import type { Product } from '@shopping-mall/shared-types'
 import { formatMoney } from '../../lib/utils/format'
 import { PLACEHOLDER_IMAGE, productImage } from '../../lib/utils/images'
 import { storeHref } from '../../lib/navigation/store'
+import { layout } from '../../lib/layout'
 import { PressScale } from '../ui/PressScale'
 import { LoveButton } from './LoveButton'
 
-const RAIL_SIZE = 176
+const RAIL_SIZE = 160
 
 export function ProductCard({
   product,
@@ -28,7 +29,7 @@ export function ProductCard({
   }, [source])
 
   return (
-    <View className={rail ? 'relative mr-4' : 'relative flex-1 px-1.5 mb-6'}>
+    <View className={rail ? 'relative mr-3' : 'relative flex-1 px-1.5 mb-4'}>
       <Link href={storeHref(product)} asChild>
         <PressScale
           accessibilityRole="button"
@@ -38,26 +39,26 @@ export function ProductCard({
           <Image
             source={{ uri }}
             accessibilityLabel={product.name}
-            className="bg-navy rounded-[22px]"
-            style={rail ? { width: RAIL_SIZE, height: 196 } : { width: '100%', height: 210 }}
+            className="bg-navy rounded-[18px]"
+            style={rail ? { width: RAIL_SIZE, height: 176 } : { width: '100%', height: layout.productImage }}
             resizeMode="cover"
             onError={() => {
               if (uri !== PLACEHOLDER_IMAGE) setUri(PLACEHOLDER_IMAGE)
             }}
           />
-          <View className="pt-3">
-            <Text className="font-light text-ice text-[15px]" numberOfLines={2}>
+          <View className="pt-2.5">
+            <Text className="font-medium text-ice text-[14px] leading-5" numberOfLines={2}>
               {product.name}
             </Text>
             {showStore ? (
-              <Text className="text-xs text-mute mt-1" numberOfLines={1}>
+              <Text className="text-xs text-mute mt-0.5" numberOfLines={1}>
                 {product.vendor?.storeName ?? 'MMall'}
               </Text>
             ) : null}
-            <Text className="mt-1.5 text-sm text-ice">
+            <Text className="mt-1 text-sm font-semibold text-ice">
               {formatMoney(product.price)}
               {product.comparePrice && product.comparePrice > product.price ? (
-                <Text className="text-mute text-xs line-through"> {formatMoney(product.comparePrice)}</Text>
+                <Text className="text-mute text-xs font-normal line-through"> {formatMoney(product.comparePrice)}</Text>
               ) : null}
             </Text>
           </View>

@@ -1,7 +1,7 @@
 import { Image, View } from 'react-native'
 
 export function BrandMark({ compact = false, onDark = false }: { compact?: boolean; onDark?: boolean }) {
-  const bag = compact ? 36 : 48
+  const bag = compact ? 28 : 48
   return (
     <View className="flex-row items-center">
       <Image
@@ -13,7 +13,7 @@ export function BrandMark({ compact = false, onDark = false }: { compact?: boole
       <Image
         source={require('../../assets/mmall-wordmark.png')}
         style={[
-          { height: compact ? 22 : 28, width: compact ? 92 : 118, marginLeft: 8 },
+          { height: compact ? 18 : 28, width: compact ? 76 : 118, marginLeft: 6 },
           onDark ? { tintColor: '#FFFFFF' } : null,
         ]}
         resizeMode="contain"

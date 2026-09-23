@@ -4,6 +4,7 @@ import * as Linking from 'expo-linking'
 import { formatMoney } from '../../../lib/utils/format'
 import { CourtNav } from '../../../components/mall/CourtNav'
 import { MallChrome } from '../../../components/mall/MallChrome'
+import { PageTitle } from '../../../components/mall/PageTitle'
 import { GiftCardFace, giftTierFor } from '../../../components/shop/GiftCardFace'
 import {
   clampGiftAmount,
@@ -48,15 +49,11 @@ export default function GiftCardsScreen() {
       <MallChrome />
       <ScrollView contentContainerClassName="pb-12">
         <CourtNav />
-        <View className="px-5">
-          <Text className="text-mute text-sm">Credit</Text>
-          <Text className="text-ice mt-1" style={{ fontSize: 34, fontWeight: '300' }}>
-            Gift cards
-          </Text>
-          <Text className="text-mute mt-2">
-            Demo mall credit stored on this phone. This is not a paid gift card and does not go through PayGate.
-          </Text>
-        </View>
+        <PageTitle
+          kicker="Credit"
+          title="Gift cards"
+          lede="Demo mall credit stored on this phone. This is not a paid gift card and does not go through PayGate."
+        />
 
         <Pressable className="mx-5 mt-6" onPress={() => setOpen(true)}>
           <GiftCardFace amount={value} custom={isCustom} />
@@ -67,7 +64,8 @@ export default function GiftCardsScreen() {
             <Pressable
               key={preset}
               onPress={() => setAmount(preset)}
-              className={`rounded-full px-4 py-2 mr-2 mb-2 ${amount === preset ? 'bg-brand' : 'bg-panel'}`}
+              className={`rounded-full px-4 mr-2 mb-2 items-center justify-center ${amount === preset ? 'bg-brand' : 'bg-panel'}`}
+              style={{ minHeight: 40 }}
             >
               <Text className={amount === preset ? 'text-white font-semibold' : 'text-ice'}>
                 {formatMoney(preset)}
