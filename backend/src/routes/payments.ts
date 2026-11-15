@@ -19,12 +19,14 @@ router.post(
   '/paygate/initiate',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const { orderId } = z.object({ orderId: z.string().min(8) }).parse(req.body)
+    const { orderId, paymentReturnUrl } = z
+      .object({ orderId: z.string().min(8), paymentReturnUrl: z.string().min(8).max(400).optional() })
+      .parse(req.body)
     const order = await prisma.order.findFirst({
       where: { id: orderId, customerId: req.user!.id },
     })
     if (!order) throw new HttpError(404, 'Order not found')
-    res.json(await initiatePaygate(order.id))
+    res.json(await initiatePaygate(order.id, paymentReturnUrl))
   }),
 )
 

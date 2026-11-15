@@ -2,7 +2,7 @@ import { registerJob } from './shared/queue/index.js'
 import { initiatePaygate } from './services/paygate/index.js'
 
 registerJob('payment:process', async (job) => {
-  await initiatePaygate(job.data.orderId)
+  await initiatePaygate(job.data.orderId, job.data.paymentReturnUrl)
 })
 
 registerJob('order:fulfillment', async (job) => {

@@ -4,7 +4,7 @@ import { queue } from '../../shared/queue/index.js'
 import { HttpError } from '../../shared/middleware/error.js'
 import { commitPaidOrderStock } from '../orders/stock.js'
 import { PAYGATE_ENCRYPTION_KEY, PAYGATE_TEST_ID, paygateChecksum, verifyChecksum } from './checksum.js'
-import { apiPublicUrl, paygateNotifyUrl, paygateReturnUrl, safeReturnUrl } from '../../shared/runtime-config.js'
+import { apiPublicUrl, paygateNotifyUrl, resolvePaygateReturnUrl } from '../../shared/runtime-config.js'
 
 const nativeReturns = new Map<string, string>()
 
@@ -45,7 +45,10 @@ export async function initiatePaygate(orderId: string, paymentReturnUrl?: string
   const payRequestId = order.payRequestId ?? randomUUID().toUpperCase()
   const amountCents = Math.round(order.totalAmount * 100)
   const transactionDate = new Date().toISOString().slice(0, 19).replace('T', ' ')
-  const returnUrl = safeReturnUrl(paymentReturnUrl)
+  const returnUrl = resolvePaygateReturnUrl(paymentReturnUrl)
+  if (!returnUrl) {
+    throw new HttpError(400, 'PayGate return URL is not allowed for this checkout')
+  }
   nativeReturns.set(payRequestId, returnUrl)
   const notifyUrl = paygateNotifyUrl()
   const checksum = initiateChecksum({
@@ -152,7 +155,10 @@ export async function completeMockPayment(payRequestId: string, result: string) 
     TRANSACTION_STATUS: String(status),
     CHECKSUM: paygateChecksum([PAYGATE_TEST_ID, payRequestId, order.id], PAYGATE_ENCRYPTION_KEY),
   })
-  const dest = nativeReturns.get(payRequestId) ?? paygateReturnUrl()
+  const dest = nativeReturns.get(payRequestId)
+  if (!dest) {
+    throw new HttpError(400, 'PayGate return URL expired. Start checkout again from the same site.')
+  }
   const join = dest.includes('?') ? '&' : '?'
   return `${dest}${join}${returnQs.toString()}`
 }
