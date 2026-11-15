@@ -86,7 +86,7 @@ export function withSellerDetail(product: Product): Product {
 }
 
 export function reviewsFromApi(product: Product): ProductReview[] {
-  const raw = (product as Product & { reviews?: Array<Record<string, unknown>> }).reviews
+  const raw = product.reviews as Array<Record<string, unknown>> | undefined
   if (!Array.isArray(raw) || raw.length === 0) return []
   return raw.map((row, index) => {
     const customer = row.customer as { firstName?: string; lastName?: string } | undefined

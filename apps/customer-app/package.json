@@ -9,7 +9,7 @@
     "ios": "expo start --ios",
     "run:android": "expo run:android",
     "run:ios": "expo run:ios",
-    "prebuild": "expo prebuild",
+    "native:prebuild": "expo prebuild",
     "eas:android": "eas build --platform android --profile preview",
     "eas:ios": "eas build --platform ios --profile preview",
     "eas:all": "eas build --platform all --profile preview",

@@ -47,9 +47,11 @@ export const mallDepartments = [
       { name: 'Outdoor', icon: '🏕️' },
     ],
   },
-] as const
+]
 
-export const mallCategories = mallDepartments.flatMap((group) => group.items)
+export const mallCategories: { name: string; icon: string }[] = mallDepartments.flatMap((group) => [
+  ...group.items,
+])
 
 export const mallSubcategories: Record<string, string[]> = {
   Electronics: ['Phones', 'Computers', 'Audio', 'Wearables'],

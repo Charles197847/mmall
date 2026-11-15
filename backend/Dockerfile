@@ -3,6 +3,8 @@ WORKDIR /app
 COPY package.json ./
 COPY prisma ./prisma/
 RUN npm install
+ENV DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/shopping_mall
+ENV DIRECT_URL=postgresql://postgres:postgres@127.0.0.1:5432/shopping_mall
 RUN npx prisma generate
 COPY . .
 RUN npm run build

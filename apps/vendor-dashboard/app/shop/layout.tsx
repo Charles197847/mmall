@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { AdPopup } from '../../components/shop/AdPopup'
+import { DemoPaymentsNotice } from '../../components/shop/DemoPaymentsNotice'
 import { ShopFilterProvider } from '../../lib/ShopFilterProvider'
 
 export const metadata: Metadata = {
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 export default function ShopLayout({ children }: { children: React.ReactNode }) {
   return (
     <ShopFilterProvider>
+      <DemoPaymentsNotice />
       {children}
       <AdPopup />
     </ShopFilterProvider>
