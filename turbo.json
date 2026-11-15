@@ -5,6 +5,18 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
+    "customer-app#build": {
+      "env": ["EXPO_PUBLIC_API_URL", "EXPO_PUBLIC_DEMO_PAYMENTS"]
+    },
+    "vendor-dashboard#build": {
+      "env": ["NEXT_PUBLIC_API_URL", "NEXT_PUBLIC_DEMO_PAYMENTS", "NEXT_PUBLIC_IMGBB_API_KEY"]
+    },
+    "admin-panel#build": {
+      "env": ["NEXT_PUBLIC_API_URL"]
+    },
+    "@shopping-mall/shared-ui#build": {
+      "outputs": []
+    },
     "dev": {
       "cache": false,
       "persistent": true
