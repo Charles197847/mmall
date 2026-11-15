@@ -11,17 +11,17 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#050814"
+      "backgroundColor": "#0B1736"
     },
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mmall.customer",
+      "buildNumber": "1",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         },
-        "NSFaceIDUsageDescription": "MMall uses Face ID to confirm a passkey sign-in.",
         "NSLocationWhenInUseUsageDescription": "MMall uses your location to show nearby shops first."
       },
       "associatedDomains": [
@@ -35,12 +35,17 @@
         "backgroundColor": "#0B1736"
       },
       "package": "com.mmall.customer",
+      "versionCode": 1,
       "permissions": [
         "INTERNET",
-        "USE_BIOMETRIC",
-        "USE_FINGERPRINT",
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
+      ],
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.VIBRATE"
       ],
       "intentFilters": [
         {
@@ -88,7 +93,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "0ad96b28-57b7-47ea-a8a8-6d19e980bad6"
+        "projectId": ""
       }
     }
   }

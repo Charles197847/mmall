@@ -182,7 +182,7 @@ Client API variables include the `/api/v1` prefix because the apps append paths 
 | `EXPO_PUBLIC_API_URL` | yes | `https://mmall-api.meeronixgroup.co.za/api/v1` |
 | `EXPO_PUBLIC_DEMO_PAYMENTS` | yes | `true` |
 
-Use the same `EXPO_PUBLIC_API_URL` for EAS preview and production builds. A native binary cannot call localhost.
+Use the same `EXPO_PUBLIC_API_URL` for EAS preview and production builds. A native binary cannot call localhost. Those profiles already set it in `apps/customer-app/eas.json`. Google Play account setup, `eas init`, the preview APK, the production AAB, and closed testing are in [MOBILE_RELEASE.md](MOBILE_RELEASE.md).
 
 ### `mmall-api` (Render or Railway)
 
