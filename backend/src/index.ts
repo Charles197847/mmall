@@ -20,19 +20,26 @@ import { setTenantContext } from './shared/middleware/tenant.js'
 import { errorHandler } from './shared/middleware/error.js'
 import { connectRedis } from './shared/redis/index.js'
 import { startWorkers } from './shared/queue/index.js'
+import { searchProvider } from './shared/search/mode.js'
+import { assertProductionConfig, resolveCorsOrigins } from './shared/runtime-config.js'
 import './jobs.js'
 
 const app = express()
 const port = Number(process.env.PORT ?? 3000)
 
 app.use(helmet())
-app.use(cors())
+app.use(cors({ origin: resolveCorsOrigins() }))
 app.use('/api/v1/payments/webhook', express.raw({ type: 'application/json' }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', service: 'shopping-mall-api' })
+  res.json({
+    status: 'ok',
+    service: 'shopping-mall-api',
+    search: searchProvider(),
+    payments: process.env.PAYGATE_MODE ?? 'mock',
+  })
 })
 
 app.use(optionalAuth)
@@ -56,6 +63,13 @@ app.use('/api/v1/admin', adminRoutes)
 app.use(errorHandler)
 
 async function start() {
+  try {
+    assertProductionConfig()
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error)
+    process.exit(1)
+  }
+
   try {
     await connectRedis()
     startWorkers()

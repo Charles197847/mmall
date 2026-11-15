@@ -9,21 +9,18 @@ import {
 import { prisma } from '../../shared/database/index.js'
 import { HttpError } from '../../shared/middleware/error.js'
 import { signToken } from '../../shared/middleware/auth.js'
+import { webauthnOrigins, webauthnRpId } from '../../shared/runtime-config.js'
+
+type AuthenticatorTransport = 'ble' | 'cable' | 'hybrid' | 'internal' | 'nfc' | 'smart-card' | 'usb'
 
 const challenges = new Map<string, { challenge: string; userId?: string; expires: number }>()
 
 function rpID() {
-  return process.env.WEBAUTHN_RP_ID ?? 'localhost'
+  return webauthnRpId()
 }
 
 function origins() {
-  const extra = (process.env.WEBAUTHN_ORIGINS ?? '')
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
-  return extra.length
-    ? extra
-    : ['http://localhost:8081', 'http://localhost:3001', 'http://localhost:3002', 'http://127.0.0.1:8081']
+  return webauthnOrigins()
 }
 
 function rememberChallenge(key: string, challenge: string, userId?: string) {

@@ -155,6 +155,10 @@ npx eas-cli env:create --name EXPO_PUBLIC_API_URL --value https://YOUR-API/api/v
 
 Bundle IDs: `com.mmall.customer`. Deep link scheme: `mmall://`.
 
+## Deployment
+
+Vercel hosts the shop (`mmall.meeronixgroup.co.za`), the admin panel, and an optional Expo web export. The Express API, BullMQ worker, Redis, and Postgres stay off Vercel. See [docs/DEPLOY.md](docs/DEPLOY.md) for project settings, environment variables, DNS CNAMEs, and the go-live checklist.
+
 ## License
 
 Private — all rights reserved.

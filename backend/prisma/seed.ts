@@ -1,9 +1,11 @@
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import { assertDemoSeedAllowed } from '../src/shared/demo-seed.js'
 
 const prisma = new PrismaClient()
 
 async function main() {
+  assertDemoSeedAllowed()
   const passwordHash = await bcrypt.hash('Password123!', 12)
 
   const admin = await prisma.user.upsert({
@@ -466,7 +468,6 @@ async function main() {
     harbor: harborUser.email,
     northline: northlineUser.email,
     customer: customer.email,
-    password: 'Password123!',
   })
 }
 

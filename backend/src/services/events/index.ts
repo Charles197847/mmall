@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import jwt from 'jsonwebtoken'
 import { subscribeGrid, publishGrid } from '../../shared/events.js'
+import { getJwtSecret } from '../../shared/jwt-secret.js'
 import { asyncHandler } from '../../shared/middleware/error.js'
 
 const router = Router()
-const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-only-change-me'
 
 router.get(
   '/',
@@ -12,7 +12,7 @@ router.get(
     const token = typeof req.query.token === 'string' ? req.query.token : undefined
     if (token) {
       try {
-        jwt.verify(token, JWT_SECRET)
+        jwt.verify(token, getJwtSecret())
       } catch {
         return res.status(401).json({ error: 'Invalid token' })
       }

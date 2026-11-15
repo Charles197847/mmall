@@ -9,6 +9,7 @@ import { useThemeStore } from '../stores/themeStore'
 import { ThemeSync } from '../components/theme/ThemeSync'
 import { ThemeRoot } from '../components/theme/ThemeRoot'
 import { LiveGridSync } from '../components/live/LiveGridSync'
+import { DemoPaymentsNotice } from '../components/demo/DemoPaymentsNotice'
 
 const queryClient = new QueryClient()
 
@@ -23,6 +24,7 @@ export default function RootLayout() {
         <AuthProvider>
           <LiveGridSync />
           <ThemeRoot>
+            <DemoPaymentsNotice />
             <Stack screenOptions={headerOptions(mode)}>
               <Stack.Screen name="index" options={{ headerShown: false }} />
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />

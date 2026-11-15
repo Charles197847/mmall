@@ -31,7 +31,9 @@ function getBaseUrl() {
     return process.env.EXPO_PUBLIC_API_URL
   }
   if (Platform.OS === 'web') {
-    return 'http://localhost:4000/api/v1'
+    return process.env.NODE_ENV === 'production'
+      ? 'https://mmall-api.meeronixgroup.co.za/api/v1'
+      : 'http://localhost:4000/api/v1'
   }
   const host = lanHost()
   if (host) return `http://${host}:4000/api/v1`

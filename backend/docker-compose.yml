@@ -50,6 +50,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/shopping_mall
+      DIRECT_URL: postgresql://postgres:postgres@postgres:5432/shopping_mall
       REDIS_URL: redis://redis:6379
       ELASTICSEARCH_URL: http://elasticsearch:9200
       JWT_SECRET: change-me-in-docker

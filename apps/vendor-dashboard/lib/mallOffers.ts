@@ -7,12 +7,10 @@ function catalog(): Product[] {
 }
 
 export function mallSpecials(): Product[] {
-  return catalog()
-    .map((product, index) => {
-      if (index % 3 !== 0) return null
-      return { ...product, comparePrice: Math.round(product.price * 1.22) }
-    })
-    .filter((product): product is Product => Boolean(product))
+  return catalog().flatMap((product, index) => {
+    if (index % 3 !== 0) return []
+    return [{ ...product, comparePrice: Math.round(product.price * 1.22) }]
+  })
 }
 
 export function mallBestsellers(): Product[] {

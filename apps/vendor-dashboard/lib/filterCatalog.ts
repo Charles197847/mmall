@@ -24,7 +24,7 @@ export function shopsForSubcategory(category: string, subcategory: string): Filt
       id: product.vendorId,
       storeName: product.vendor?.storeName ?? 'Store',
       slug: product.vendor?.slug ?? product.vendorId,
-      logo: product.vendor?.logo,
+      logo: product.vendor?.logo ?? undefined,
     })
   }
   return shops

@@ -2,8 +2,11 @@ import type { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import type { Role } from '@prisma/client'
 import { prisma } from '../database/index.js'
+import { getJwtSecret } from '../jwt-secret.js'
 
-const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-only-change-me'
+function jwtSecret() {
+  return getJwtSecret()
+}
 
 export type AuthToken = {
   sub: string
@@ -13,7 +16,7 @@ export type AuthToken = {
 
 export function signToken(payload: AuthToken, expiresIn?: jwt.SignOptions['expiresIn']) {
   const ttl = expiresIn ?? ((process.env.JWT_EXPIRES_IN ?? '2h') as jwt.SignOptions['expiresIn'])
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: ttl })
+  return jwt.sign(payload, jwtSecret(), { expiresIn: ttl })
 }
 
 export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
@@ -24,7 +27,7 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
 
   try {
     const token = header.slice(7)
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthToken
+    const decoded = jwt.verify(token, jwtSecret()) as AuthToken
     req.user = { id: decoded.sub, email: decoded.email, role: decoded.role }
   } catch {
     // ignore invalid tokens on optional routes
@@ -41,7 +44,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 
   try {
     const token = header.slice(7)
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthToken
+    const decoded = jwt.verify(token, jwtSecret()) as AuthToken
     req.user = { id: decoded.sub, email: decoded.email, role: decoded.role }
     return next()
   } catch {
