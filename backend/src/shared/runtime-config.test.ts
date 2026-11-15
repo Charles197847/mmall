@@ -7,10 +7,12 @@ import {
   PRODUCTION_SHOP_ORIGIN,
   apiPublicUrl,
   assertProductionConfig,
+  appPaygateReturnUrl,
   paygateNotifyUrl,
-  paygateReturnUrl,
+  paygateReturnAllowlist,
   resolveCorsOrigins,
-  safeReturnUrl,
+  resolvePaygateReturnUrl,
+  shopPaygateReturnUrl,
 } from './runtime-config.js'
 
 const secret = 'production-jwt-secret-value-with-enough-length'
@@ -35,16 +37,25 @@ describe('deployed origins', () => {
     assert.ok(origins.includes(PRODUCTION_SHOP_ORIGIN))
   })
 
-  it('derives PayGate return and notify URLs from the deployed hosts', () => {
+  it('keeps a separate PayGate return URL for the shop and for Expo web', () => {
     const env = { NODE_ENV: 'production', JWT_SECRET: secret }
-    assert.equal(paygateReturnUrl(env), `${PRODUCTION_SHOP_ORIGIN}/shop/checkout/payment-return`)
+    const shopReturn = `${PRODUCTION_SHOP_ORIGIN}/shop/checkout/payment-return`
+    const appReturn = `${PRODUCTION_APP_ORIGIN}/cart/payment-return`
+    assert.equal(shopPaygateReturnUrl(env), shopReturn)
+    assert.equal(appPaygateReturnUrl(env), appReturn)
     assert.equal(apiPublicUrl(env), PRODUCTION_API_ORIGIN)
     assert.equal(paygateNotifyUrl(env), `${PRODUCTION_API_ORIGIN}/api/v1/payments/paygate/notify`)
+    assert.ok(paygateReturnAllowlist(env).includes(shopReturn))
+    assert.ok(paygateReturnAllowlist(env).includes(appReturn))
+    assert.equal(resolvePaygateReturnUrl(shopReturn, env), shopReturn)
+    assert.equal(resolvePaygateReturnUrl(appReturn, env), appReturn)
+    assert.equal(resolvePaygateReturnUrl('https://evil.example/shop/checkout/payment-return', env), null)
+    assert.equal(resolvePaygateReturnUrl('http://localhost:3001/shop/checkout/payment-return', env), null)
+    assert.equal(resolvePaygateReturnUrl('mmall://cart/payment-return', env), 'mmall://cart/payment-return')
     assert.equal(
-      safeReturnUrl('http://localhost:3001/shop/checkout/payment-return', env),
-      `${PRODUCTION_SHOP_ORIGIN}/shop/checkout/payment-return`,
+      resolvePaygateReturnUrl(shopReturn, { ...env, PAYGATE_RETURN_URL: appReturn }),
+      shopReturn,
     )
-    assert.equal(safeReturnUrl('mmall://cart/payment-return', env), 'mmall://cart/payment-return')
   })
 
   it('refuses to start production when a public URL points at localhost', () => {

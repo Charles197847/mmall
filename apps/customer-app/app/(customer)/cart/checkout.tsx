@@ -174,7 +174,10 @@ export default function CheckoutScreen() {
       if (token) {
         await api.auth.updateAddress(shippingAddress, token).catch(() => undefined)
       }
-      const paymentReturnUrl = Linking.createURL('/cart/payment-return')
+      const paymentReturnUrl =
+        Platform.OS === 'web' && typeof window !== 'undefined'
+          ? `${window.location.origin}/cart/payment-return`
+          : Linking.createURL('/cart/payment-return')
       const response = await api.orders.create(
         {
           items: liveItems.map((item) => ({ productId: item.productId, quantity: item.quantity })),

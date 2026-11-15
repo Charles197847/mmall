@@ -133,16 +133,25 @@ PAYGATE_ID=10011072130
 PAYGATE_ENCRYPTION_KEY=secret
 PAYGATE_MODE=mock
 API_PUBLIC_URL=https://mmall-api.meeronixgroup.co.za
-PAYGATE_RETURN_URL=https://mmall.meeronixgroup.co.za/shop/checkout/payment-return
 ```
 
-The notify URL is not a separate variable. It is `{API_PUBLIC_URL}/api/v1/payments/paygate/notify`, which is:
+There is no single PayGate return URL. Each checkout client sends `paymentReturnUrl`, and the API keeps it only when the origin and path are on the allowlist.
+
+| Checkout | Client sends | Allowlisted return |
+| --- | --- | --- |
+| `/shop` on `mmall.meeronixgroup.co.za` | `window.location.origin` + `/shop/checkout/payment-return` | `https://mmall.meeronixgroup.co.za/shop/checkout/payment-return` |
+| Expo web on `mmall-app.meeronixgroup.co.za` | `window.location.origin` + `/cart/payment-return` | `https://mmall-app.meeronixgroup.co.za/cart/payment-return` |
+| Expo Go / EAS | `mmall://` or `exp://` link to `/cart/payment-return` | that native link, when the path is the cart return |
+
+The shop page is `apps/vendor-dashboard/app/shop/checkout/payment-return`. The Expo page is `apps/customer-app/app/(customer)/cart/payment-return.tsx`. A shop return is not rewritten to the Expo app, and an Expo web return is not rewritten to the shop. Anything else, including localhost in production, is rejected and checkout does not start.
+
+The allowlist is built from `VENDOR_DASHBOARD_URL` (shop path only) and `FRONTEND_URL` (Expo web path only), plus those two production URLs. `PAYGATE_RETURN_URLS` is an optional comma-separated list of extra full return URLs for preview deploys. Do not set one global `PAYGATE_RETURN_URL` and expect every client to land there. If that older variable is set, it is only one more allowlist entry.
+
+The notify URL is still one API URL, not a per-client setting. It is `{API_PUBLIC_URL}/api/v1/payments/paygate/notify`:
 
 ```text
 https://mmall-api.meeronixgroup.co.za/api/v1/payments/paygate/notify
 ```
-
-The shop checkout also sends `paymentReturnUrl` as its own origin plus `/shop/checkout/payment-return`. On `mmall.meeronixgroup.co.za` that is the same URL. A localhost return URL sent to a production API is replaced with `PAYGATE_RETURN_URL`. Native `mmall://` and `exp://` returns are still accepted for Expo Go / EAS.
 
 Set `NEXT_PUBLIC_DEMO_PAYMENTS=true` on `mmall-shop` and `EXPO_PUBLIC_DEMO_PAYMENTS=true` on `mmall-app`. That shows a one-line notice, **Demo — payments are simulated**, on every `/shop` page (including checkout) and across the Expo web export. The native app does not show it.
 
@@ -189,14 +198,14 @@ Use the same `EXPO_PUBLIC_API_URL` for EAS preview and production builds. A nati
 | `JWT_EXPIRES_IN` | no | `2h` |
 | `WEBAUTHN_RP_ID` | no | `meeronixgroup.co.za` so one passkey can be used on the subdomains. `localhost` is ignored in production. |
 | `WEBAUTHN_ORIGINS` | no | `https://mmall.meeronixgroup.co.za,https://mmall-admin.meeronixgroup.co.za,https://mmall-app.meeronixgroup.co.za` |
-| `API_PUBLIC_URL` | no | `https://mmall-api.meeronixgroup.co.za` |
-| `PAYGATE_RETURN_URL` | no | `https://mmall.meeronixgroup.co.za/shop/checkout/payment-return` |
+| `API_PUBLIC_URL` | no | `https://mmall-api.meeronixgroup.co.za`. Notify is `{API_PUBLIC_URL}/api/v1/payments/paygate/notify`. |
+| `VENDOR_DASHBOARD_URL` | no | `https://mmall.meeronixgroup.co.za`. Shop returns use this origin + `/shop/checkout/payment-return`. |
+| `FRONTEND_URL` | no | `https://mmall-app.meeronixgroup.co.za`. Expo web returns use this origin + `/cart/payment-return`. |
+| `PAYGATE_RETURN_URLS` | no | empty. Optional extra full return URLs, comma-separated, for preview hosts. Not a single global return. |
 | `PAYGATE_ID` | no | `10011072130` |
 | `PAYGATE_ENCRYPTION_KEY` | yes | `secret` (published sandbox key) |
 | `PAYGATE_MODE` | no | `mock` |
-| `VENDOR_DASHBOARD_URL` | no | `https://mmall.meeronixgroup.co.za` |
 | `ADMIN_PANEL_URL` | no | `https://mmall-admin.meeronixgroup.co.za` |
-| `FRONTEND_URL` | no | `https://mmall-app.meeronixgroup.co.za` |
 | `CORS_ORIGINS` | no | empty, or extra `https://` preview origins. The three hosts above are always allowed. Localhost entries are dropped in production. |
 | `ALLOW_DEMO_SEED` | no | unset. `true` only for the one-shot demo seed, then remove it. |
 | `KYC_PROVIDER` | no | `smileid` |
@@ -227,8 +236,8 @@ pnpm --filter backend start
 7. API service is one always-on instance. `GET https://mmall-api.meeronixgroup.co.za/health` returns `status: ok`, `search: postgres`, `payments: mock`.
 8. Vercel projects `mmall-shop` and `mmall-admin` (and `mmall-app` if wanted) use the root directories and commands above. `NEXT_PUBLIC_API_URL` / `EXPO_PUBLIC_API_URL` are `https://mmall-api.meeronixgroup.co.za/api/v1`. Demo payment flags are `true`.
 9. Domains added on each Vercel project and on the API host. Registrar CNAMEs match the targets those dashboards show. Apex and `www` were not edited.
-10. A guest opening `https://mmall.meeronixgroup.co.za/` lands on `/shop` and sees **Demo — payments are simulated**. Checkout returns to `https://mmall.meeronixgroup.co.za/shop/checkout/payment-return`. The mock PayGate page is on `https://mmall-api.meeronixgroup.co.za/paygate/mock/...`.
-11. Admin at `https://mmall-admin.meeronixgroup.co.za` can call the API (no CORS error). Expo web, if deployed, uses the same API host.
+10. A guest opening `https://mmall.meeronixgroup.co.za/` lands on `/shop` and sees **Demo — payments are simulated**. Shop checkout returns to `https://mmall.meeronixgroup.co.za/shop/checkout/payment-return`. Expo web checkout returns to `https://mmall-app.meeronixgroup.co.za/cart/payment-return`. The mock PayGate page is on `https://mmall-api.meeronixgroup.co.za/paygate/mock/...`.
+11. Admin at `https://mmall-admin.meeronixgroup.co.za` can call the API (no CORS error). Expo web, if deployed, uses the same API host and its own return URL.
 
 ## What still blocks a real store
 
