@@ -134,26 +134,17 @@ npx expo run:android
 npx expo run:ios
 ```
 
-Cloud builds with **EAS** (Android APK and iOS from this Windows PC):
+Cloud builds with **EAS**, then Google Play, are in [docs/MOBILE_RELEASE.md](docs/MOBILE_RELEASE.md). Short form, from `apps/customer-app`:
 
 ```bash
-cd apps/customer-app
 npx eas-cli login
 npx eas-cli init
 npx eas-cli build --platform android --profile preview
-npx eas-cli build --platform ios --profile preview
 ```
 
-Or from the repo root: `pnpm --filter customer-app eas:android`
+Preview and production already set `EXPO_PUBLIC_API_URL` to `https://mmall-api.meeronixgroup.co.za/api/v1`. Do not point a store build at localhost. Or from the repo root: `pnpm --filter customer-app eas:android` (preview APK).
 
-A standalone install cannot use `localhost`. After the first project exists, set the live API URL:
-
-```bash
-cd apps/customer-app
-npx eas-cli env:create --name EXPO_PUBLIC_API_URL --value https://YOUR-API/api/v1 --environment preview --visibility plaintext
-```
-
-Bundle IDs: `com.mmall.customer`. Deep link scheme: `mmall://`.
+Application id (Android package and iOS bundle id): `com.mmall.customer`. Deep link scheme: `mmall://`.
 
 ## Deployment
 
